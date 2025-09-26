@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.4] - 2024-12-30
+
+### Documentation
+- Clarified usage of separate commands (src-to-kb vs src-to-kb-search)
+- Added complete workflow examples showing two-step process
+- Updated MCP installation for Claude Code's new CLI commands
+- Added --kb parameter examples for all search operations
+
+### Improved
+- Clearer error messages when commands are used incorrectly
+- Better distinction between generate and search functionality
+
 ## [1.1.3] - 2024-12-30
 
 ### Fixed
