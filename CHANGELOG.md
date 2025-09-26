@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.9] - 2025-09-26
+
+### Changed
+- Updated to use GPT-5 with the correct Responses API (`/v1/responses`)
+- Using GPT-5's reasoning capabilities with `medium` effort for balanced performance
+- Added debug logging for API key detection
+- Improved error messages for API failures
+
+### Fixed
+- AI-powered search now properly uses GPT-5's Responses API format
+- Correctly handles GPT-5 response structure (`output_text` instead of `choices`)
+
 ## [1.1.8] - 2025-09-26
 
 ### Fixed

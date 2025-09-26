@@ -113,9 +113,11 @@ class KnowledgeBaseSearch {
 
   async generateAnswerWithAI(query, searchResults) {
     if (!process.env.OPENAI_API_KEY) {
+      console.log('⚠️  No OPENAI_API_KEY found in environment');
       // Fallback to basic answer generation without AI
       return this.generateAnswer(query, searchResults);
     }
+    console.log('✅ Using AI-powered search with GPT-5');
 
     if (searchResults.length === 0) {
       return {
@@ -132,8 +134,8 @@ class KnowledgeBaseSearch {
         content: r.fullContent || r.preview
       }));
 
-      // Use OpenAI to understand query intent and generate answer
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // Use OpenAI GPT-5 with Responses API
+      const response = await fetch('https://api.openai.com/v1/responses', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -141,33 +143,30 @@ class KnowledgeBaseSearch {
         },
         body: JSON.stringify({
           model: 'gpt-5',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a helpful code search assistant. Analyze the user's query and the search results from their codebase to provide a clear, actionable answer.
+          input: `You are a helpful code search assistant. Analyze the user's query and the search results from their codebase to provide a clear, actionable answer.
 
-              Format your response as follows:
-              1. Directly answer the user's question
-              2. Reference specific files and locations
-              3. Provide step-by-step instructions if applicable
-              4. Suggest related areas to explore
+Query: "${query}"
 
-              Be concise but comprehensive. Use markdown formatting for clarity.`
-            },
-            {
-              role: 'user',
-              content: `Query: "${query}"\n\nSearch Results:\n${JSON.stringify(context, null, 2)}\n\nProvide a helpful answer based on these code search results.`
-            }
-          ],
-          temperature: 0.3,
-          max_tokens: 500
+Search Results:
+${JSON.stringify(context, null, 2)}
+
+Provide a helpful answer based on these code search results. Format your response as follows:
+1. Directly answer the user's question
+2. Reference specific files and locations
+3. Provide step-by-step instructions if applicable
+4. Suggest related areas to explore
+
+Be concise but comprehensive. Use markdown formatting for clarity.`,
+          reasoning: { effort: "medium" },
+          text: { verbosity: "medium" },
+          max_output_tokens: 500
         })
       });
 
       const data = await response.json();
 
-      if (data.choices && data.choices[0]) {
-        const aiAnswer = data.choices[0].message.content;
+      if (data.output_text) {
+        const aiAnswer = data.output_text;
         const relevantFiles = [...new Set(searchResults.slice(0, 5).map(r => r.documentPath))];
 
         return {
@@ -179,7 +178,13 @@ class KnowledgeBaseSearch {
         };
       }
     } catch (error) {
-      console.error('OpenAI API error:', error.message);
+      console.error('❌ OpenAI API error:', error.message);
+      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        console.error('⚠️  Invalid API key. Please check your OPENAI_API_KEY.');
+      }
+      if (error.message.includes('model')) {
+        console.error('⚠️  Model error. The requested model may not be available.');
+      }
       // Fallback to basic answer generation
       return this.generateAnswer(query, searchResults);
     }
