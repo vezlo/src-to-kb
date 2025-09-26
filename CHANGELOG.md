@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.1] - 2024-12-30
+
+### Changed
+- Reorganized codebase structure for cleaner package
+- Moved development scripts to `scripts/` directory
+- Reduced npm package size by excluding non-essential files
+- Fixed test script paths for new structure
+
+### Package Structure
+- Root directory now contains only essential executable files
+- Development utilities moved to scripts/ (excluded from npm package)
+- Cleaner, more professional package organization
+
 ## [1.1.0] - 2024-12-30
 
 ### Added
