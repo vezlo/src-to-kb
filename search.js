@@ -143,8 +143,135 @@ class KnowledgeBaseSearch {
       }
     });
 
-    // Check for language support queries
-    if (queryLower.includes('language') || queryLower.includes('support')) {
+    // Extract key information from results
+    const topResult = searchResults[0];
+    const relevantFiles = [...new Set(searchResults.slice(0, 5).map(r => r.documentPath))];
+    let confidence = Math.min(topResult.score / 50, 1); // Normalize confidence
+    let answer = ''; // Initialize answer variable
+
+    // Analyze content for better answers
+    const allContent = searchResults.slice(0, 3).map(r => r.fullContent || r.preview).join('\n');
+    const contexts = searchResults.slice(0, 3).map(r => r.contextSnippets).flat();
+
+    // Check for specific query patterns and provide intelligent answers
+    if (queryLower.includes('password reset') || queryLower.includes('reset password') || queryLower.includes('forgot password')) {
+      // Look for password reset related patterns
+      const resetFiles = searchResults.filter(r =>
+        r.documentPath.toLowerCase().includes('auth') ||
+        r.documentPath.toLowerCase().includes('password') ||
+        r.documentPath.toLowerCase().includes('reset') ||
+        r.documentPath.toLowerCase().includes('login')
+      );
+
+      if (resetFiles.length > 0) {
+        const authFile = resetFiles[0];
+        answer = `Password reset functionality can be found in the authentication module:\n\n`;
+        answer += `📁 **Primary location**: ${authFile.documentPath}\n`;
+        answer += `📍 Lines: ${authFile.lines}\n\n`;
+
+        // Check for routes/endpoints
+        if (allContent.includes('/reset-password') || allContent.includes('/forgot-password')) {
+          answer += `🔗 **Endpoint**: The password reset endpoint appears to be configured at "/reset-password" or "/forgot-password"\n\n`;
+        }
+
+        // Check for components
+        const componentFiles = resetFiles.filter(r => r.documentPath.includes('component'));
+        if (componentFiles.length > 0) {
+          answer += `🎨 **UI Components**: Password reset UI is in ${componentFiles[0].documentPath}\n\n`;
+        }
+
+        answer += `💡 **How it works**: The password reset flow typically involves:\n`;
+        answer += `1. User requests a password reset link\n`;
+        answer += `2. System sends an email with a reset token\n`;
+        answer += `3. User clicks the link and enters a new password\n`;
+        answer += `4. System validates the token and updates the password\n\n`;
+        answer += `📂 **Related files**: ${relevantFiles.slice(0, 3).join(', ')}`;
+      } else {
+        answer = `I couldn't find specific password reset implementation, but check these auth-related files:\n`;
+        answer += `📂 ${relevantFiles.slice(0, 3).join(', ')}\n\n`;
+        answer += `💡 You might need to implement password reset functionality or it may be handled by an external service.`;
+      }
+    } else if (queryLower.includes('login') || queryLower.includes('authentication') || queryLower.includes('auth')) {
+      // Authentication queries
+      const authFiles = searchResults.filter(r =>
+        r.documentPath.toLowerCase().includes('auth') ||
+        r.documentPath.toLowerCase().includes('login')
+      );
+
+      if (authFiles.length > 0) {
+        answer = `Authentication is implemented in:\n\n`;
+        answer += `📁 **Main auth module**: ${authFiles[0].documentPath}\n`;
+        answer += `📍 Lines: ${authFiles[0].lines}\n\n`;
+
+        if (allContent.includes('jwt') || allContent.includes('JWT')) {
+          answer += `🔐 **Method**: Using JWT (JSON Web Tokens) for authentication\n`;
+        }
+        if (allContent.includes('oauth') || allContent.includes('OAuth')) {
+          answer += `🔑 **OAuth**: OAuth integration detected for social login\n`;
+        }
+
+        answer += `\n📂 **Related files**: ${relevantFiles.slice(0, 3).join(', ')}`;
+      }
+    } else if (queryLower.includes('api') || queryLower.includes('endpoint') || queryLower.includes('route')) {
+      // API/Route queries
+      answer = `API endpoints and routes found in:\n\n`;
+
+      const apiFiles = searchResults.filter(r =>
+        r.documentPath.includes('api') ||
+        r.documentPath.includes('route') ||
+        r.documentPath.includes('controller')
+      );
+
+      if (apiFiles.length > 0) {
+        apiFiles.slice(0, 3).forEach(file => {
+          answer += `📁 ${file.documentPath} (lines ${file.lines})\n`;
+        });
+      } else {
+        answer += `📂 ${relevantFiles.slice(0, 3).join('\n📂 ')}\n`;
+      }
+
+      answer += `\n💡 Look for route definitions, API handlers, or controller methods in these files.`;
+    } else if (queryLower.includes('database') || queryLower.includes('model') || queryLower.includes('schema')) {
+      // Database queries
+      answer = `Database and data model information:\n\n`;
+
+      const dbFiles = searchResults.filter(r =>
+        r.documentPath.includes('model') ||
+        r.documentPath.includes('schema') ||
+        r.documentPath.includes('database') ||
+        r.documentPath.includes('entity')
+      );
+
+      if (dbFiles.length > 0) {
+        answer += `📊 **Data models found in**:\n`;
+        dbFiles.slice(0, 3).forEach(file => {
+          answer += `  • ${file.documentPath}\n`;
+        });
+      }
+
+      answer += `\n📂 **All relevant files**: ${relevantFiles.slice(0, 3).join(', ')}`;
+    } else if (queryLower.includes('component') || queryLower.includes('ui') || queryLower.includes('frontend')) {
+      // UI/Component queries
+      answer = `UI components and frontend code:\n\n`;
+
+      const componentFiles = searchResults.filter(r =>
+        r.documentPath.includes('component') ||
+        r.documentPath.includes('view') ||
+        r.documentPath.includes('page') ||
+        r.documentPath.endsWith('.tsx') ||
+        r.documentPath.endsWith('.jsx')
+      );
+
+      if (componentFiles.length > 0) {
+        answer += `🎨 **Components found in**:\n`;
+        componentFiles.slice(0, 4).forEach(file => {
+          answer += `  • ${file.documentPath}\n`;
+        });
+      }
+
+      answer += `\n💡 These files contain React/Vue/Angular components and UI logic.`;
+    } else if (queryLower.includes('language') || queryLower.includes('support')) {
+      // Language support queries
       const supportedLangs = Array.from(languages);
       if (supportedLangs.length > 0) {
         return {
@@ -157,39 +284,42 @@ class KnowledgeBaseSearch {
           }))
         };
       }
-    }
-
-    // Build contextual answer
-    const topResult = searchResults[0];
-    const relevantFiles = [...new Set(searchResults.slice(0, 5).map(r => r.documentPath))];
-
-    let answer = '';
-    let confidence = Math.min(topResult.score / 50, 1); // Normalize confidence
-
-    // Extract key information from context
-    const contexts = searchResults.slice(0, 3).map(r => r.contextSnippets).flat();
-
-    if (isQuestion) {
-      answer = `Based on the code analysis, `;
-
-      // Try to provide specific answer based on context
-      if (contexts.length > 0) {
-        answer += `here's what I found: "${contexts[0]}"`;
-
-        if (contexts.length > 1) {
-          answer += ` Additionally, the code shows: "${contexts[1]}"`;
-        }
-      }
     } else {
-      answer = `Found ${searchResults.length} relevant matches. The most relevant information appears in ${topResult.documentPath}`;
+      // Generic answer for other queries
+      answer = `Based on your search for "${query}", here's what I found:\n\n`;
 
-      if (contexts.length > 0) {
-        answer += `. Key context: "${contexts[0]}"`;
+      // Try to extract meaningful context
+      const meaningfulContexts = contexts.filter(c => c && c.length > 20);
+
+      if (meaningfulContexts.length > 0) {
+        answer += `📝 **Key findings**:\n`;
+
+        // Clean up the context and make it presentable
+        meaningfulContexts.slice(0, 2).forEach((ctx, idx) => {
+          // Extract the most relevant part of the context
+          const cleanContext = ctx.replace(/[\n\r\t]+/g, ' ').trim();
+          const shortContext = cleanContext.length > 150 ?
+            cleanContext.substring(0, 150) + '...' : cleanContext;
+          answer += `${idx + 1}. ${shortContext}\n`;
+        });
+        answer += '\n';
+      }
+
+      answer += `📁 **Found in ${searchResults.length} location${searchResults.length > 1 ? 's' : ''}**:\n`;
+      relevantFiles.slice(0, 4).forEach(file => {
+        answer += `  • ${file}\n`;
+      });
+
+      // Add helpful context based on file types
+      const primaryExt = Object.keys(fileTypes)[0];
+      if (primaryExt === '.js' || primaryExt === '.ts' || primaryExt === '.jsx' || primaryExt === '.tsx') {
+        answer += `\n💡 These are ${primaryExt} files containing JavaScript/TypeScript code.`;
+      } else if (primaryExt === '.py') {
+        answer += `\n💡 These are Python files.`;
+      } else if (primaryExt === '.java') {
+        answer += `\n💡 These are Java files.`;
       }
     }
-
-    // Add file references
-    answer += `\n\n📍 Found in: ${relevantFiles.slice(0, 3).join(', ')}`;
 
     return {
       answer: answer,

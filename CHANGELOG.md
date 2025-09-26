@@ -9,6 +9,9 @@
 - Added --kb parameter examples for all search operations
 
 ### Improved
+- **Much better search answers**: Intelligent, context-aware responses for common queries
+- Smart detection of password reset, authentication, API, database, and UI queries
+- Structured answers with clear file locations, explanations, and actionable information
 - Clearer error messages when commands are used incorrectly
 - Better distinction between generate and search functionality
 
