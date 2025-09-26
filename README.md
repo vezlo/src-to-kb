@@ -212,14 +212,31 @@ node test.js
 ### Quick Setup 🚀
 
 ```bash
-# 1. Install the package globally (if not already installed)
+# 1. Install the package globally
 npm install -g @vezlo/src-to-kb
 
-# 2. Add to Claude Code
-claude mcp add src-to-kb -- npx -y @vezlo/src-to-kb src-to-kb-mcp
+# 2. Find your global npm installation path
+npm list -g @vezlo/src-to-kb --depth=0
 
-# Or with OpenAI API key for embeddings:
-claude mcp add src-to-kb --env OPENAI_API_KEY=your-key -- npx -y @vezlo/src-to-kb src-to-kb-mcp
+# 3. Add to Claude Code (replace the path with your npm global path)
+# For macOS/Linux with nvm:
+claude mcp add src-to-kb -- node ~/.nvm/versions/node/v22.6.0/lib/node_modules/@vezlo/src-to-kb/mcp-server.mjs
+
+# For macOS/Linux without nvm:
+claude mcp add src-to-kb -- node /usr/local/lib/node_modules/@vezlo/src-to-kb/mcp-server.mjs
+
+# For Windows:
+claude mcp add src-to-kb -- node %APPDATA%\npm\node_modules\@vezlo\src-to-kb\mcp-server.mjs
+
+# With OpenAI API key for embeddings:
+claude mcp add src-to-kb --env OPENAI_API_KEY=your-key -- node [your-path]/mcp-server.mjs
+```
+
+#### Alternative: Using npx (if the above doesn't work)
+
+```bash
+# Try with npx (may not work on all systems)
+claude mcp add src-to-kb -- npx -y @vezlo/src-to-kb src-to-kb-mcp
 ```
 
 ### Managing the MCP Server

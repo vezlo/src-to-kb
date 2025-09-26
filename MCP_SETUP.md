@@ -15,15 +15,29 @@ This guide explains how to set up the src-to-kb MCP server with Claude Code, Cur
 ### For Claude Code (Recommended) 🚀
 
 ```bash
-# First, ensure the package is installed globally:
+# 1. First, ensure the package is installed globally:
 npm install -g @vezlo/src-to-kb
 
-# Then add the MCP server to Claude Code:
-claude mcp add src-to-kb -- npx -y @vezlo/src-to-kb src-to-kb-mcp
+# 2. Find your global npm installation path:
+npm list -g @vezlo/src-to-kb --depth=0
+# This will show the installation path
 
-# Or with OpenAI API key for embeddings:
-claude mcp add src-to-kb --env OPENAI_API_KEY=your-api-key-here -- npx -y @vezlo/src-to-kb src-to-kb-mcp
+# 3. Add the MCP server to Claude Code using the full path:
+
+# For macOS/Linux with nvm (adjust version number as needed):
+claude mcp add src-to-kb -- node ~/.nvm/versions/node/v22.6.0/lib/node_modules/@vezlo/src-to-kb/mcp-server.mjs
+
+# For macOS/Linux without nvm:
+claude mcp add src-to-kb -- node /usr/local/lib/node_modules/@vezlo/src-to-kb/mcp-server.mjs
+
+# For Windows:
+claude mcp add src-to-kb -- node %APPDATA%\npm\node_modules\@vezlo\src-to-kb\mcp-server.mjs
+
+# With OpenAI API key for embeddings:
+claude mcp add src-to-kb --env OPENAI_API_KEY=your-key -- node [your-path]/mcp-server.mjs
 ```
+
+**Note:** The `npx` approach may not work on all systems. Using the full path with `node` is more reliable.
 
 That's it! The server is now available in Claude Code.
 
@@ -170,26 +184,43 @@ Similar usage - the MCP tools integrate seamlessly with Cursor's AI features.
 
 ## Troubleshooting
 
-### MCP Server Not Showing in /mcp
+### MCP Server Not Showing in /mcp or "Failed to connect"
 
 1. Ensure the package is installed globally:
    ```bash
    npm list -g @vezlo/src-to-kb
    ```
 
-2. Test the server directly:
+2. Find the exact installation path:
    ```bash
-   npx -y @vezlo/src-to-kb src-to-kb-mcp
-   # Should output: {"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"0.1.0"...}}
+   # This will show where the package is installed
+   npm list -g @vezlo/src-to-kb --depth=0
+
+   # Or find the mcp-server.mjs file directly:
+   find $(npm root -g) -name "mcp-server.mjs" 2>/dev/null | grep src-to-kb
    ```
 
-3. Re-add the server:
+3. Test the server directly:
+   ```bash
+   # Replace path with your actual installation path
+   node ~/.nvm/versions/node/v22.6.0/lib/node_modules/@vezlo/src-to-kb/mcp-server.mjs
+   # Should run without errors (no output is normal)
+   ```
+
+4. Re-add the server with the full path:
    ```bash
    claude mcp remove src-to-kb
-   claude mcp add src-to-kb -- npx -y @vezlo/src-to-kb src-to-kb-mcp
+   # Use the path from step 2
+   claude mcp add src-to-kb -- node [your-full-path]/mcp-server.mjs
    ```
 
-4. Restart Claude Code completely
+5. Verify connection:
+   ```bash
+   claude mcp list
+   # Should show: src-to-kb ... ✓ Connected
+   ```
+
+6. Restart Claude Code completely
 
 ### Tools Not Appearing
 

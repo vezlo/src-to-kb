@@ -135,7 +135,7 @@ class KnowledgeBaseSearch {
       }));
 
       // Use OpenAI GPT-5 with Responses API
-      const response = await fetch('https://api.openai.com/v1/responses', {
+      const initialResponse = await fetch('https://api.openai.com/v1/responses', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -143,30 +143,79 @@ class KnowledgeBaseSearch {
         },
         body: JSON.stringify({
           model: 'gpt-5',
-          input: `You are a helpful code search assistant. Analyze the user's query and the search results from their codebase to provide a clear, actionable answer.
+          input: `Query: "${query}"
 
-Query: "${query}"
+Search Results from codebase:
+${context.slice(0, 3).map(r => `File: ${r.file}\nContent: ${r.content.substring(0, 500)}...`).join('\n\n')}
 
-Search Results:
-${JSON.stringify(context, null, 2)}
-
-Provide a helpful answer based on these code search results. Format your response as follows:
-1. Directly answer the user's question
-2. Reference specific files and locations
-3. Provide step-by-step instructions if applicable
-4. Suggest related areas to explore
-
-Be concise but comprehensive. Use markdown formatting for clarity.`,
-          reasoning: { effort: "medium" },
-          text: { verbosity: "medium" },
-          max_output_tokens: 500
+Based on these search results, provide a helpful answer about what the code supports.`,
+          reasoning: { effort: "low" },
+          text: { verbosity: "low" },
+          max_output_tokens: 2000
         })
       });
 
-      const data = await response.json();
+      let data = await initialResponse.json();
+      const responseId = data.id;
 
-      if (data.output_text) {
-        const aiAnswer = data.output_text;
+      // Check for errors
+      if (!initialResponse.ok || data.error) {
+        console.error('❌ GPT-5 API Error!');
+        console.error('Error details:', data.error || data);
+        throw new Error(data.error?.message || `API returned ${initialResponse.status}`);
+      }
+
+      // Poll for complete response if status is incomplete
+      let attempts = 0;
+      const maxAttempts = 30; // Wait up to 30 seconds
+
+      while (data.status === 'incomplete' && attempts < maxAttempts) {
+        // Wait 1 second before polling
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Get updated response
+        const pollResponse = await fetch(`https://api.openai.com/v1/responses/${responseId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        data = await pollResponse.json();
+        attempts++;
+      }
+
+      if (data.status === 'incomplete' && attempts >= maxAttempts) {
+        throw new Error('GPT-5 response timed out after 30 seconds');
+      }
+
+      // console.log('📦 Final Response Data:', JSON.stringify(data, null, 2));
+
+      // Extract text from GPT-5's nested output structure
+      let aiAnswer = null;
+
+      if (data.output && Array.isArray(data.output)) {
+        // Look for message type output
+        const messageOutput = data.output.find(item => item.type === 'message');
+        if (messageOutput && messageOutput.content && Array.isArray(messageOutput.content)) {
+          // Find the output_text item in content array
+          const textContent = messageOutput.content.find(c => c.type === 'output_text');
+          if (textContent && textContent.text) {
+            aiAnswer = textContent.text;
+          }
+        }
+
+        // Fallback: look for direct text output
+        if (!aiAnswer) {
+          const textOutput = data.output.find(item => item.type === 'text');
+          if (textOutput) {
+            aiAnswer = textOutput.content || textOutput.text || textOutput.value;
+          }
+        }
+      }
+
+      if (aiAnswer) {
         const relevantFiles = [...new Set(searchResults.slice(0, 5).map(r => r.documentPath))];
 
         return {
@@ -176,17 +225,20 @@ Be concise but comprehensive. Use markdown formatting for clarity.`,
           topFiles: relevantFiles,
           aiGenerated: true
         };
+      } else {
+        console.error('❌ No recognized output field in response. Available fields:', Object.keys(data));
+        throw new Error(`GPT-5 response missing expected field. Got fields: ${Object.keys(data).join(', ')}`);
       }
     } catch (error) {
-      console.error('❌ OpenAI API error:', error.message);
-      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-        console.error('⚠️  Invalid API key. Please check your OPENAI_API_KEY.');
-      }
-      if (error.message.includes('model')) {
-        console.error('⚠️  Model error. The requested model may not be available.');
-      }
-      // Fallback to basic answer generation
-      return this.generateAnswer(query, searchResults);
+      console.error('❌ GPT-5 API error details:', error.message);
+      console.error('Full error:', error);
+
+      // Return error in answer
+      return {
+        answer: `⚠️ **GPT-5 API Error**: ${error.message}\n\nPlease check:\n1. Your OpenAI API key has access to GPT-5\n2. The GPT-5 model is available in your region\n3. Your API key is valid and has sufficient credits\n\nFalling back to basic search results...`,
+        confidence: 0,
+        error: true
+      };
     }
 
     // Fallback to basic answer generation

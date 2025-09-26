@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.1.11] - 2025-09-26
+
+### Fixed
+- Fixed MCP server installation instructions for better compatibility
+- Added explicit node path instructions for MCP setup
+- Updated troubleshooting guide with "Failed to connect" solutions
+
+### Documentation
+- Improved MCP installation guide with platform-specific paths
+- Added instructions to find global npm installation path
+- Enhanced troubleshooting section for connection issues
+
+## [1.1.10] - 2025-09-26
+
+### Fixed
+- Fixed GPT-5 text extraction from deeply nested response structure
+- GPT-5 responses now properly extract from `output[1].content[0].text`
+- Cleaned up debug logging for cleaner output
+- GPT-5 integration now fully functional with correct response parsing
+
 ## [1.1.9] - 2025-09-26
 
 ### Changed
