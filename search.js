@@ -232,7 +232,6 @@ class KnowledgeBaseSearch {
       topFiles: relevantFiles
     };
   }
-  }
 
   searchByType(type) {
     const results = [];

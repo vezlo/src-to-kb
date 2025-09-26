@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.7] - 2025-09-26
+
+### Fixed
+- Fixed syntax error in search.js (removed extra closing brace)
+
 ## [1.1.6] - 2025-09-26
 
 ### Changed
