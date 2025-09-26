@@ -16,7 +16,10 @@ This guide explains how to set up the src-to-kb MCP server with Claude Code, Cur
 
 ```bash
 # One command does everything!
-npx @vezlo/src-to-kb install-mcp
+npx -p @vezlo/src-to-kb src-to-kb-mcp-install
+
+# Or if you have it installed globally:
+src-to-kb-mcp-install
 ```
 
 This will:

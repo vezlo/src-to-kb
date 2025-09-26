@@ -167,7 +167,7 @@ node test.js
 
 ```bash
 # One-command installation!
-npx @vezlo/src-to-kb install-mcp
+npx -p @vezlo/src-to-kb src-to-kb-mcp-install
 
 # That's it! The installer will:
 # ✅ Check npm package installation
