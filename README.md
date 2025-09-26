@@ -60,16 +60,22 @@ src-to-kb /path/to/your/repo --embeddings
 
 ### 4. Search the Knowledge Base
 
+**IMPORTANT**: First generate a knowledge base, then search it:
+
 ```bash
-# Search with natural language (use src-to-kb-search, not src-to-kb)
-src-to-kb-search search "where is login path"
+# Step 1: Generate a knowledge base
+src-to-kb ./your-project --output ./project-kb
+
+# Step 2: Search the knowledge base
+src-to-kb-search search "where is login path" --kb ./project-kb
+
+# Or if using default location (./knowledge-base):
+src-to-kb ./your-project
 src-to-kb-search search "authentication implementation"
 
-# Show statistics
-src-to-kb-search stats
-
-# List files by type
-src-to-kb-search type JavaScript
+# Other search commands:
+src-to-kb-search stats --kb ./project-kb
+src-to-kb-search type JavaScript --kb ./project-kb
 ```
 
 ## Installation
@@ -135,7 +141,24 @@ Options:
   --extensions        File extensions to include (comma-separated)
 ```
 
-## Examples
+## Complete Example Workflow
+
+```bash
+# 1. Generate knowledge base from your frontend code
+src-to-kb ./frontend/ --output ./frontend-kb
+
+# 2. Search for specific functionality
+src-to-kb-search search "forgot password" --kb ./frontend-kb
+src-to-kb-search search "authentication flow" --kb ./frontend-kb
+
+# 3. Get statistics about the codebase
+src-to-kb-search stats --kb ./frontend-kb
+
+# 4. List all TypeScript files
+src-to-kb-search type TypeScript --kb ./frontend-kb
+```
+
+## More Examples
 
 ### Process Any Repository
 
