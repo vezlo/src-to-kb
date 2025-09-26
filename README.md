@@ -187,7 +187,7 @@ node test.js
    - "What languages does this codebase use?"
    - "Find files similar to config.js"
 
-See [MCP_SETUP.md](MCP_SETUP.md) for detailed configuration instructions.
+See [MCP_SETUP.md](MCP_SETUP.md) for setup instructions and [MCP_TOOLS_GUIDE.md](MCP_TOOLS_GUIDE.md) for detailed tool documentation.
 
 ## Searching the Knowledge Base
 
