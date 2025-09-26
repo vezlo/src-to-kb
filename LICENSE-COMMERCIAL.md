@@ -30,9 +30,8 @@ Commercial licenses are priced based on:
 
 To obtain a commercial license or discuss pricing:
 
-📧 Email: [your-email@example.com]
-🌐 Website: [your-website.com]
-📞 Phone: [your-phone]
+📧 Email: ashaheen@workhub.ai
+🌐 Website: www.vezlo.org
 
 ## FAQ
 
