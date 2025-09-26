@@ -184,32 +184,32 @@ node test.js
 # 5. Verify language detection
 ```
 
-## MCP Server for Claude Code & Cursor
+## MCP Server for Claude Code
 
-### Quick Setup (Automatic) 🚀
+### Quick Setup 🚀
 
 ```bash
-# One-command installation!
-npx -p @vezlo/src-to-kb src-to-kb-mcp-install
+# 1. Install the package globally (if not already installed)
+npm install -g @vezlo/src-to-kb
 
-# That's it! The installer will:
-# ✅ Check npm package installation
-# ✅ Configure Claude Code automatically
-# ✅ Optional: Set up OpenAI API key for embeddings
-# ✅ Provide test commands
+# 2. Add to Claude Code
+claude mcp add src-to-kb -- npx -y @vezlo/src-to-kb src-to-kb-mcp
+
+# Or with OpenAI API key for embeddings:
+claude mcp add src-to-kb --env OPENAI_API_KEY=your-key -- npx -y @vezlo/src-to-kb src-to-kb-mcp
 ```
 
-### Other MCP Commands
+### Managing the MCP Server
 
 ```bash
-# Check installation status
-src-to-kb-mcp-install --status
+# Check if installed
+claude mcp list
 
-# Update OpenAI API key
-src-to-kb-mcp-install --update-api-key
+# Remove if needed
+claude mcp remove src-to-kb
 
-# Uninstall MCP server
-src-to-kb-mcp-install --uninstall
+# Get server details
+claude mcp get src-to-kb
 ```
 
 ### After Installation

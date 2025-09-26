@@ -12,24 +12,22 @@ This guide explains how to set up the src-to-kb MCP server with Claude Code, Cur
 
 ## Installation
 
-### Option 1: Automatic Installation (Recommended) 🚀
+### For Claude Code (Recommended) 🚀
 
 ```bash
-# One command does everything!
-npx -p @vezlo/src-to-kb src-to-kb-mcp-install
+# First, ensure the package is installed globally:
+npm install -g @vezlo/src-to-kb
 
-# Or if you have it installed globally:
-src-to-kb-mcp-install
+# Then add the MCP server to Claude Code:
+claude mcp add src-to-kb -- npx -y @vezlo/src-to-kb src-to-kb-mcp
+
+# Or with OpenAI API key for embeddings:
+claude mcp add src-to-kb --env OPENAI_API_KEY=your-api-key-here -- npx -y @vezlo/src-to-kb src-to-kb-mcp
 ```
 
-This will:
-1. Check if the npm package is installed
-2. Find your Claude configuration automatically
-3. Add the MCP server configuration
-4. Optionally set up your OpenAI API key
-5. Provide test instructions
+That's it! The server is now available in Claude Code.
 
-### Option 2: Manual Installation
+### For Claude Desktop (Manual Installation)
 
 If you prefer to configure manually, add the following to your Claude Code configuration file:
 
@@ -52,23 +50,16 @@ If you prefer to configure manually, add the following to your Claude Code confi
 }
 ```
 
-### Step 3: Configure Cursor (if using Cursor)
+### Verify Installation in Claude Code
 
-For Cursor, add to your settings:
+1. Open Claude Code
+2. Type `/mcp` to see the MCP status
+3. You should see `src-to-kb` in the list of servers
 
-```json
-{
-  "mcp.servers": {
-    "src-to-kb": {
-      "command": "node",
-      "args": ["/path/to/src-to-kb/mcp-server.mjs"],
-      "env": {
-        "OPENAI_API_KEY": "your-api-key-here"
-      }
-    }
-  }
-}
-```
+If you don't see it:
+- Make sure you've installed the npm package first
+- Try restarting Claude Code
+- Check that `npx @vezlo/src-to-kb src-to-kb-mcp` works in your terminal
 
 ## Available MCP Tools
 
@@ -132,6 +123,23 @@ Update the knowledge base with new changes.
 Update the knowledge base with latest changes
 ```
 
+## Managing the MCP Server
+
+```bash
+# List all configured MCP servers
+claude mcp list
+
+# Get details about the src-to-kb server
+claude mcp get src-to-kb
+
+# Remove the server if needed
+claude mcp remove src-to-kb
+
+# Update with new API key
+claude mcp remove src-to-kb
+claude mcp add src-to-kb --env OPENAI_API_KEY=new-key -- npx -y @vezlo/src-to-kb src-to-kb-mcp
+```
+
 ## Usage Examples
 
 ### In Claude Code
@@ -162,18 +170,26 @@ Similar usage - the MCP tools integrate seamlessly with Cursor's AI features.
 
 ## Troubleshooting
 
-### MCP Server Not Starting
+### MCP Server Not Showing in /mcp
 
-1. Check that Node.js is installed:
+1. Ensure the package is installed globally:
    ```bash
-   node --version
+   npm list -g @vezlo/src-to-kb
    ```
 
-2. Verify the path in your configuration is correct
+2. Test the server directly:
+   ```bash
+   npx -y @vezlo/src-to-kb src-to-kb-mcp
+   # Should output: {"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"0.1.0"...}}
+   ```
 
-3. Check logs:
-   - Claude Code: Check developer console
-   - Cursor: Check output panel
+3. Re-add the server:
+   ```bash
+   claude mcp remove src-to-kb
+   claude mcp add src-to-kb -- npx -y @vezlo/src-to-kb src-to-kb-mcp
+   ```
+
+4. Restart Claude Code completely
 
 ### Tools Not Appearing
 

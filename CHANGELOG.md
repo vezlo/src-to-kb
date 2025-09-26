@@ -5,6 +5,11 @@
 ### Fixed
 - Re-release of 1.1.2 with proper npm publishing
 
+### Changed
+- Updated MCP installation instructions for Claude Code's new `claude mcp add` command
+- Simplified MCP setup documentation with direct CLI commands
+- Removed complex auto-installer in favor of simple manual command
+
 ## [1.1.2] - 2024-12-30
 
 ### Fixed
