@@ -1,6 +1,6 @@
-# Source Code to Knowledge Base Generator
+# Source Code to Knowledge Base Generator with MCP Server
 
-Convert any source code repository into a searchable knowledge base with automatic chunking, embedding generation, and intelligent search capabilities.
+Convert any source code repository into a searchable knowledge base with automatic chunking, embedding generation, and intelligent search capabilities. Now with MCP (Model Context Protocol) support for Claude Code and Cursor integration!
 
 ## Features
 
@@ -11,6 +11,8 @@ Convert any source code repository into a searchable knowledge base with automat
 - 📊 **Statistics**: Comprehensive analysis of your codebase
 - 🚀 **Fast Processing**: Efficient file scanning and processing
 - 💾 **Structured Storage**: Organized JSON output for easy integration
+- 🤖 **MCP Server**: Direct integration with Claude Code, Cursor, and other MCP-compatible tools
+- 💡 **AI-Powered Search**: Natural language queries with intelligent answer generation
 
 ## Quick Start
 
@@ -40,11 +42,13 @@ node kb-generator.js /path/to/your/repo --embeddings
 
 ## Installation
 
-No installation required! The script uses only Node.js built-in modules. Just ensure you have Node.js 14+ installed.
-
 ```bash
-# Clone or copy the files to your project
-cd /Users/admin/Documents/AI-Playground/src-to-kb
+# Clone the repository
+git clone https://github.com/vezlo/src-to-kb.git
+cd src-to-kb
+
+# Install dependencies (only needed for MCP server)
+npm install
 
 # Run the generator
 node kb-generator.js /path/to/repo
@@ -111,13 +115,41 @@ node test.js
 # 5. Verify language detection
 ```
 
+## MCP Server for Claude Code & Cursor
+
+### Setup MCP Server
+
+1. **Configure Claude Code** - Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "src-to-kb": {
+      "command": "node",
+      "args": ["/path/to/src-to-kb/mcp-server.mjs"],
+      "env": {
+        "OPENAI_API_KEY": "optional-api-key"
+      }
+    }
+  }
+}
+```
+
+2. **Restart Claude Code** and use natural language:
+   - "Generate a knowledge base for this project"
+   - "Search for authentication implementations"
+   - "What languages does this codebase use?"
+   - "Find files similar to config.js"
+
+See [MCP_SETUP.md](MCP_SETUP.md) for detailed configuration instructions.
+
 ## Searching the Knowledge Base
 
 Use the included search tool to query your knowledge base:
 
 ```bash
-# Search for text
-node search.js search "initialize app"
+# AI-powered search with natural language answers
+node search.js search "how does authentication work?"
 
 # Find all JavaScript files
 node search.js type JavaScript
@@ -135,8 +167,11 @@ node search.js similar src/index.js
 # Specify knowledge base path
 node search.js search "query" --kb ./my-knowledge-base
 
-# Limit results
-node search.js search "query" --limit 20
+# Show detailed evidence
+node search.js search "query" --verbose
+
+# Get raw search results (old format)
+node search.js search "query" --raw
 ```
 
 ## Output Structure
@@ -203,6 +238,8 @@ Each chunk contains:
 3. **Code Analysis**: Analyze patterns and structure across large repositories
 4. **Knowledge Extraction**: Extract domain knowledge from source code
 5. **Code Search**: Build intelligent code search systems
+6. **IDE Integration**: Use directly in Claude Code or Cursor for code understanding
+7. **Team Knowledge Sharing**: Create searchable knowledge bases for team onboarding
 
 ## Performance
 
