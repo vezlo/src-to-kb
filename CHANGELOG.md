@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.8] - 2025-09-26
+
+### Fixed
+- Re-release to update npm package with syntax fix
+
 ## [1.1.7] - 2025-09-26
 
 ### Fixed
