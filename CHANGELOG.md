@@ -1,6 +1,11 @@
 # Changelog
 
-## [1.1.5] - 2024-12-30
+## [1.1.6] - 2025-09-26
+
+### Changed
+- Updated to use GPT-5 model for AI-powered search
+
+## [1.1.5] - 2025-09-26
 
 ### Added
 - **AI-Powered Search**: Use OpenAI GPT-5 to intelligently understand queries and generate helpful answers
@@ -11,7 +16,7 @@
 - Search command now properly excludes --kb flag value from query string
 - Improved argument parsing to handle flags in any position
 
-## [1.1.4] - 2024-12-30
+## [1.1.4] - 2025-09-26
 
 ### Documentation
 - Clarified usage of separate commands (src-to-kb vs src-to-kb-search)
@@ -26,7 +31,7 @@
 - Clearer error messages when commands are used incorrectly
 - Better distinction between generate and search functionality
 
-## [1.1.3] - 2024-12-30
+## [1.1.3] - 2025-09-26
 
 ### Fixed
 - Re-release of 1.1.2 with proper npm publishing
@@ -36,7 +41,7 @@
 - Simplified MCP setup documentation with direct CLI commands
 - Removed complex auto-installer in favor of simple manual command
 
-## [1.1.2] - 2024-12-30
+## [1.1.2] - 2025-09-26
 
 ### Fixed
 - Fixed `--help` flag not working properly
@@ -50,7 +55,7 @@
 - Clarified that search uses `src-to-kb-search` not `src-to-kb search`
 - Added more usage examples in Quick Start section
 
-## [1.1.1] - 2024-12-30
+## [1.1.1] - 2025-09-26
 
 ### Changed
 - Reorganized codebase structure for cleaner package
@@ -63,7 +68,7 @@
 - Development utilities moved to scripts/ (excluded from npm package)
 - Cleaner, more professional package organization
 
-## [1.1.0] - 2024-12-30
+## [1.1.0] - 2025-09-25
 
 ### Added
 - 🚀 **Automatic MCP Installer** - One-command installation with `npx @vezlo/src-to-kb install-mcp`
@@ -83,7 +88,7 @@
 - Updated README with simplified installation instructions
 - Enhanced MCP_SETUP.md with automatic installation option
 
-## [1.0.0] - 2024-12-29
+## [1.0.0] - 2025-09-25
 
 ### Initial Release
 - 📁 Multi-language support for 20+ programming languages
