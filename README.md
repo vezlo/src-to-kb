@@ -26,7 +26,7 @@ After installation, you'll have access to these commands:
 - 🚀 **Fast Processing**: Efficient file scanning and processing
 - 💾 **Structured Storage**: Organized JSON output for easy integration
 - 🤖 **MCP Server**: Direct integration with Claude Code, Cursor, and other MCP-compatible tools
-- 💡 **AI-Powered Search**: Uses OpenAI GPT-3.5 for intelligent query understanding and helpful answers
+- 💡 **AI-Powered Search**: Uses OpenAI GPT-5 for intelligent query understanding and helpful answers
 
 ## Quick Start
 
@@ -250,7 +250,7 @@ See [MCP_SETUP.md](MCP_SETUP.md) for manual setup and [MCP_TOOLS_GUIDE.md](MCP_T
 
 ### AI-Powered Search (with OpenAI)
 
-When `OPENAI_API_KEY` is set, searches use GPT-3.5 for intelligent answers:
+When `OPENAI_API_KEY` is set, searches use GPT-5 for intelligent answers:
 
 ```bash
 # Set your OpenAI API key

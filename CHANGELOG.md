@@ -3,7 +3,7 @@
 ## [1.1.5] - 2024-12-30
 
 ### Added
-- **AI-Powered Search**: Use OpenAI GPT-3.5 to intelligently understand queries and generate helpful answers
+- **AI-Powered Search**: Use OpenAI GPT-5 to intelligently understand queries and generate helpful answers
 - Automatic fallback to basic search when OPENAI_API_KEY is not set
 - Context-aware answers that understand typos, variations, and intent
 
