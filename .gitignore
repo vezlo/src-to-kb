@@ -1,0 +1,34 @@
+# Test output
+test-output/
+test-repo/
+
+# Knowledge base output
+knowledge-base/
+*-kb/
+kb-output/
+
+# Node modules (if added later)
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
