@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/vezlo-src-to-kb-badge.png)](https://mseep.ai/app/vezlo-src-to-kb)
+
 # Source Code to Knowledge Base Generator with MCP Server
 
 [![npm version](https://img.shields.io/npm/v/@vezlo/src-to-kb.svg)](https://www.npmjs.com/package/@vezlo/src-to-kb)
