@@ -282,7 +282,12 @@ generateKB();
 
 ## License
 
-MIT
+This software is dual-licensed:
+
+- **Non-Commercial Use**: Free under AGPL-3.0 license
+- **Commercial Use**: Requires a commercial license - contact us for details
+
+See [LICENSE](LICENSE) file for full details.
 
 ## Contributing
 
