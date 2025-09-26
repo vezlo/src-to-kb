@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.5] - 2024-12-30
+
+### Added
+- **AI-Powered Search**: Use OpenAI GPT-3.5 to intelligently understand queries and generate helpful answers
+- Automatic fallback to basic search when OPENAI_API_KEY is not set
+- Context-aware answers that understand typos, variations, and intent
+
+### Fixed
+- Search command now properly excludes --kb flag value from query string
+- Improved argument parsing to handle flags in any position
+
 ## [1.1.4] - 2024-12-30
 
 ### Documentation

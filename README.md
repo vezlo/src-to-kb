@@ -26,7 +26,7 @@ After installation, you'll have access to these commands:
 - 🚀 **Fast Processing**: Efficient file scanning and processing
 - 💾 **Structured Storage**: Organized JSON output for easy integration
 - 🤖 **MCP Server**: Direct integration with Claude Code, Cursor, and other MCP-compatible tools
-- 💡 **AI-Powered Search**: Natural language queries with intelligent answer generation
+- 💡 **AI-Powered Search**: Uses OpenAI GPT-3.5 for intelligent query understanding and helpful answers
 
 ## Quick Start
 
@@ -248,20 +248,35 @@ See [MCP_SETUP.md](MCP_SETUP.md) for manual setup and [MCP_TOOLS_GUIDE.md](MCP_T
 
 ## Searching the Knowledge Base
 
-Use the included search tool to query your knowledge base:
+### AI-Powered Search (with OpenAI)
+
+When `OPENAI_API_KEY` is set, searches use GPT-3.5 for intelligent answers:
 
 ```bash
-# AI-powered search with natural language answers
-src-to-kb-search search "how does authentication work?"
+# Set your OpenAI API key
+export OPENAI_API_KEY=your-api-key-here
+
+# Get intelligent, context-aware answers
+src-to-kb-search search "how does authentication work?" --kb ./project-kb
+src-to-kb-search search "where is password reset?" --kb ./project-kb
+```
+
+### Basic Search (without OpenAI)
+
+Without an API key, the tool provides basic keyword search:
+
+```bash
+# Basic search with pattern matching
+src-to-kb-search search "authentication" --kb ./project-kb
 
 # Find all JavaScript files
-src-to-kb-search type JavaScript
+src-to-kb-search type JavaScript --kb ./project-kb
 
 # Show statistics
-src-to-kb-search stats
+src-to-kb-search stats --kb ./project-kb
 
 # Find similar files
-src-to-kb-search similar src/index.js
+src-to-kb-search similar src/index.js --kb ./project-kb
 ```
 
 ### Search Options
