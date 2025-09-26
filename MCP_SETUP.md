@@ -12,16 +12,28 @@ This guide explains how to set up the src-to-kb MCP server with Claude Code, Cur
 
 ## Installation
 
-### Step 1: Install Dependencies
+### Option 1: Automatic Installation (Recommended) 🚀
 
 ```bash
-cd /path/to/src-to-kb
-npm install
+# One command does everything!
+npx @vezlo/src-to-kb install-mcp
 ```
 
-### Step 2: Configure Claude Code
+This will:
+1. Check if the npm package is installed
+2. Find your Claude configuration automatically
+3. Add the MCP server configuration
+4. Optionally set up your OpenAI API key
+5. Provide test instructions
 
-Add the following to your Claude Code configuration file (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+### Option 2: Manual Installation
+
+If you prefer to configure manually, add the following to your Claude Code configuration file:
+
+**Config file locations:**
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
 
 ```json
 {

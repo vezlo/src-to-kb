@@ -7,7 +7,8 @@
   "bin": {
     "src-to-kb": "./kb-generator.js",
     "src-to-kb-search": "./search.js",
-    "src-to-kb-mcp": "./mcp-server.mjs"
+    "src-to-kb-mcp": "./mcp-server.mjs",
+    "src-to-kb-mcp-install": "./install-mcp.js"
   },
   "scripts": {
     "start": "node kb-generator.js",

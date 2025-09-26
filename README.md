@@ -163,31 +163,42 @@ node test.js
 
 ## MCP Server for Claude Code & Cursor
 
-### Setup MCP Server
+### Quick Setup (Automatic) 🚀
 
-1. **Configure Claude Code** - Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+```bash
+# One-command installation!
+npx @vezlo/src-to-kb install-mcp
 
-```json
-{
-  "mcpServers": {
-    "src-to-kb": {
-      "command": "npx",
-      "args": ["@vezlo/src-to-kb", "src-to-kb-mcp"],
-      "env": {
-        "OPENAI_API_KEY": "optional-api-key"
-      }
-    }
-  }
-}
+# That's it! The installer will:
+# ✅ Check npm package installation
+# ✅ Configure Claude Code automatically
+# ✅ Optional: Set up OpenAI API key for embeddings
+# ✅ Provide test commands
 ```
 
-2. **Restart Claude Code** and use natural language:
+### Other MCP Commands
+
+```bash
+# Check installation status
+src-to-kb-mcp-install --status
+
+# Update OpenAI API key
+src-to-kb-mcp-install --update-api-key
+
+# Uninstall MCP server
+src-to-kb-mcp-install --uninstall
+```
+
+### After Installation
+
+1. **Restart Claude Code** completely
+2. **Test by asking Claude:**
    - "Generate a knowledge base for this project"
    - "Search for authentication implementations"
    - "What languages does this codebase use?"
    - "Find files similar to config.js"
 
-See [MCP_SETUP.md](MCP_SETUP.md) for setup instructions and [MCP_TOOLS_GUIDE.md](MCP_TOOLS_GUIDE.md) for detailed tool documentation.
+See [MCP_SETUP.md](MCP_SETUP.md) for manual setup and [MCP_TOOLS_GUIDE.md](MCP_TOOLS_GUIDE.md) for detailed tool documentation.
 
 ## Searching the Knowledge Base
 
