@@ -7,6 +7,15 @@ Convert any source code repository into a searchable knowledge base with automat
 
 📦 **Now available on npm!** Install with: `npm install -g @vezlo/src-to-kb`
 
+## Available Commands
+
+After installation, you'll have access to these commands:
+
+- **`src-to-kb`** - Generate knowledge base from source code
+- **`src-to-kb-search`** - Search the knowledge base
+- **`src-to-kb-mcp`** - Start MCP server for IDE integration
+- **`src-to-kb-mcp-install`** - Auto-configure Claude Code/Cursor
+
 ## Features
 
 - 📁 **Multi-language Support**: JavaScript, TypeScript, Python, Java, C++, Go, Rust, and more
@@ -47,6 +56,20 @@ export OPENAI_API_KEY=your-api-key-here
 
 # Generate with embeddings
 src-to-kb /path/to/your/repo --embeddings
+```
+
+### 4. Search the Knowledge Base
+
+```bash
+# Search with natural language (use src-to-kb-search, not src-to-kb)
+src-to-kb-search search "where is login path"
+src-to-kb-search search "authentication implementation"
+
+# Show statistics
+src-to-kb-search stats
+
+# List files by type
+src-to-kb-search type JavaScript
 ```
 
 ## Installation

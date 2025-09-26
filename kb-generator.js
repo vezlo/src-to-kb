@@ -476,21 +476,41 @@ Options:
   --exclude           Additional paths to exclude (comma-separated)
   --extensions        File extensions to include (comma-separated)
   --help, -h          Show this help message
+  --version, -v       Show version number
 
 Examples:
   src-to-kb /path/to/repo
   src-to-kb /path/to/repo --output ./my-kb --embeddings
   src-to-kb . --exclude tests,examples --extensions .js,.ts
+
+Note: Repository path must be provided as the first non-flag argument
     `);
     process.exit(0);
   }
 
-  const repoPath = args[0];
+  // Find the repository path (first non-flag argument)
+  let repoPath = null;
+  for (const arg of args) {
+    if (!arg.startsWith('--') && !arg.startsWith('-')) {
+      repoPath = arg;
+      break;
+    }
+  }
+
+  if (!repoPath) {
+    console.error('❌ Error: Repository path is required');
+    console.log('Usage: src-to-kb <repository-path> [options]');
+    console.log('Run "src-to-kb --help" for more information');
+    process.exit(1);
+  }
   const options = {};
 
-  // Parse CLI arguments
-  for (let i = 1; i < args.length; i++) {
+  // Parse CLI arguments (skip the repo path)
+  for (let i = 0; i < args.length; i++) {
     const arg = args[i];
+
+    // Skip the repo path
+    if (arg === repoPath) continue;
 
     if (arg === '--output' || arg === '-o') {
       options.outputPath = args[++i];

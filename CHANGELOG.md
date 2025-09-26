@@ -7,6 +7,12 @@
 - Added `--version` flag support
 - Help text now shows correct command names (src-to-kb instead of node kb-generator.js)
 - CLI arguments properly handled
+- Fixed `--embeddings` flag being treated as repository path
+
+### Documentation
+- Added "Available Commands" section to README for clarity
+- Clarified that search uses `src-to-kb-search` not `src-to-kb search`
+- Added more usage examples in Quick Start section
 
 ## [1.1.1] - 2024-12-30
 
