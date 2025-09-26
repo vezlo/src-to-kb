@@ -1,6 +1,6 @@
-# Test files and directories
+# Development scripts and test files
+scripts/
 test-*
-test.js
 *.test.js
 
 # Output directories

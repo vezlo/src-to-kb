@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-const { KnowledgeBaseGenerator } = require('./kb-generator');
+const { KnowledgeBaseGenerator } = require('../kb-generator');
 const fs = require('fs');
 const path = require('path');
 
 // Test configuration
-const TEST_REPO_PATH = path.join(__dirname, 'test-repo');
-const KB_OUTPUT_PATH = path.join(__dirname, 'test-output');
+const TEST_REPO_PATH = path.join(__dirname, '..', 'test-repo');
+const KB_OUTPUT_PATH = path.join(__dirname, '..', 'test-output');
 
 // Create a simple test repository
 function createTestRepository() {

@@ -12,10 +12,11 @@
   },
   "scripts": {
     "start": "node kb-generator.js",
-    "test": "node test.js",
+    "test": "node scripts/test.js",
     "example": "node kb-generator.js ../SaaSBot --output ./test-output",
     "search": "node search.js",
     "mcp": "node mcp-server.mjs",
+    "publish-package": "./scripts/publish.sh",
     "prepublishOnly": "npm test"
   },
   "keywords": [
