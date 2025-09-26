@@ -451,12 +451,20 @@ module.exports = { KnowledgeBaseGenerator };
 if (require.main === module) {
   const args = process.argv.slice(2);
 
-  if (args.length === 0) {
+  // Check for version flag
+  if (args.includes('--version') || args.includes('-v')) {
+    const package = require('./package.json');
+    console.log(`v${package.version}`);
+    process.exit(0);
+  }
+
+  // Check for help flag
+  if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
     console.log(`
 📚 Source Code to Knowledge Base Generator
 
 Usage:
-  node kb-generator.js <repository-path> [options]
+  src-to-kb <repository-path> [options]
 
 Options:
   --output, -o        Output directory (default: ./knowledge-base)
@@ -467,11 +475,12 @@ Options:
   --no-comments       Exclude comments from code
   --exclude           Additional paths to exclude (comma-separated)
   --extensions        File extensions to include (comma-separated)
+  --help, -h          Show this help message
 
 Examples:
-  node kb-generator.js /path/to/repo
-  node kb-generator.js /path/to/repo --output ./my-kb --embeddings
-  node kb-generator.js . --exclude tests,examples --extensions .js,.ts
+  src-to-kb /path/to/repo
+  src-to-kb /path/to/repo --output ./my-kb --embeddings
+  src-to-kb . --exclude tests,examples --extensions .js,.ts
     `);
     process.exit(0);
   }

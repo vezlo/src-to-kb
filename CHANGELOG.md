@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2] - 2024-12-30
+
+### Fixed
+- Fixed `--help` flag not working properly
+- Added `--version` flag support
+- Help text now shows correct command names (src-to-kb instead of node kb-generator.js)
+- CLI arguments properly handled
+
 ## [1.1.1] - 2024-12-30
 
 ### Changed
