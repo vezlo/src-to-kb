@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.3] - 2024-12-30
+
+### Fixed
+- Re-release of 1.1.2 with proper npm publishing
+
 ## [1.1.2] - 2024-12-30
 
 ### Fixed
