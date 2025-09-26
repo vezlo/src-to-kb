@@ -1,6 +1,11 @@
 # Source Code to Knowledge Base Generator with MCP Server
 
+[![npm version](https://img.shields.io/npm/v/@vezlo/src-to-kb.svg)](https://www.npmjs.com/package/@vezlo/src-to-kb)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 Convert any source code repository into a searchable knowledge base with automatic chunking, embedding generation, and intelligent search capabilities. Now with MCP (Model Context Protocol) support for Claude Code and Cursor integration!
+
+📦 **Now available on npm!** Install with: `npm install -g @vezlo/src-to-kb`
 
 ## Features
 
@@ -46,30 +51,38 @@ src-to-kb /path/to/your/repo --embeddings
 
 ## Installation
 
-### Option 1: Install from npm (Recommended)
+### Option 1: Install from npm (Recommended) ✅
 
 ```bash
-# Install globally
+# Install globally from npm registry
 npm install -g @vezlo/src-to-kb
 
-# Now use anywhere
-src-to-kb /path/to/repo
-src-to-kb-search search "your query"
-src-to-kb-mcp  # Start MCP server
+# Now use the commands anywhere on your system
+src-to-kb /path/to/repo                    # Generate knowledge base
+src-to-kb-search search "your query"       # Search knowledge base
+src-to-kb-mcp                              # Start MCP server for Claude/Cursor
 ```
 
-### Option 2: Install locally in a project
+### Option 2: Use with npx (No Installation)
 
 ```bash
-# Install as a dependency
-npm install @vezlo/src-to-kb
-
-# Use with npx
-npx src-to-kb /path/to/repo
-npx src-to-kb-search search "your query"
+# Run directly without installing
+npx @vezlo/src-to-kb /path/to/repo
+npx @vezlo/src-to-kb-search search "your query"
+npx @vezlo/src-to-kb-mcp
 ```
 
-### Option 3: Clone from GitHub
+### Option 3: Install in a Project
+
+```bash
+# Add as a project dependency
+npm install @vezlo/src-to-kb
+
+# Use with npx in your project
+npx src-to-kb /path/to/repo
+```
+
+### Option 4: Clone from GitHub (For Development)
 
 ```bash
 # Clone the repository
@@ -101,28 +114,32 @@ Options:
 
 ## Examples
 
-### Process SaaSBot Repository
+### Process Any Repository
 
 ```bash
-node kb-generator.js ../SaaSBot --output ./saasbot-kb --embeddings
+# Using npm package
+src-to-kb /path/to/repo --output ./repo-kb --embeddings
+
+# Or with npx
+npx @vezlo/src-to-kb /path/to/repo --output ./repo-kb --embeddings
 ```
 
 ### Process Only JavaScript and TypeScript Files
 
 ```bash
-node kb-generator.js /path/to/repo --extensions .js,.ts,.jsx,.tsx
+src-to-kb /path/to/repo --extensions .js,.ts,.jsx,.tsx
 ```
 
 ### Exclude Test and Build Directories
 
 ```bash
-node kb-generator.js /path/to/repo --exclude tests,build,dist,coverage
+src-to-kb /path/to/repo --exclude tests,build,dist,coverage
 ```
 
 ### Large Repositories with Custom Chunking
 
 ```bash
-node kb-generator.js /path/to/large-repo \
+src-to-kb /path/to/large-repo \
   --chunk-size 2000 \
   --chunk-overlap 400 \
   --max-file-size 20
@@ -155,7 +172,7 @@ node test.js
   "mcpServers": {
     "src-to-kb": {
       "command": "npx",
-      "args": ["@vezlo/src-to-kb-mcp"],
+      "args": ["@vezlo/src-to-kb", "src-to-kb-mcp"],
       "env": {
         "OPENAI_API_KEY": "optional-api-key"
       }
@@ -178,29 +195,29 @@ Use the included search tool to query your knowledge base:
 
 ```bash
 # AI-powered search with natural language answers
-node search.js search "how does authentication work?"
+src-to-kb-search search "how does authentication work?"
 
 # Find all JavaScript files
-node search.js type JavaScript
+src-to-kb-search type JavaScript
 
 # Show statistics
-node search.js stats
+src-to-kb-search stats
 
 # Find similar files
-node search.js similar src/index.js
+src-to-kb-search similar src/index.js
 ```
 
 ### Search Options
 
 ```bash
 # Specify knowledge base path
-node search.js search "query" --kb ./my-knowledge-base
+src-to-kb-search search "query" --kb ./my-knowledge-base
 
 # Show detailed evidence
-node search.js search "query" --verbose
+src-to-kb-search search "query" --verbose
 
 # Get raw search results (old format)
-node search.js search "query" --raw
+src-to-kb-search search "query" --raw
 ```
 
 ## Output Structure
