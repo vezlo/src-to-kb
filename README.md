@@ -21,13 +21,17 @@ Convert any source code repository into a searchable knowledge base with automat
 Process your repository with default settings:
 
 ```bash
+# If installed globally via npm
+src-to-kb /path/to/your/repo
+
+# Or using the script directly
 node kb-generator.js /path/to/your/repo
 ```
 
 ### 2. With Custom Output Directory
 
 ```bash
-node kb-generator.js /path/to/your/repo --output ./my-knowledge-base
+src-to-kb /path/to/your/repo --output ./my-knowledge-base
 ```
 
 ### 3. With OpenAI Embeddings
@@ -37,20 +41,45 @@ node kb-generator.js /path/to/your/repo --output ./my-knowledge-base
 export OPENAI_API_KEY=your-api-key-here
 
 # Generate with embeddings
-node kb-generator.js /path/to/your/repo --embeddings
+src-to-kb /path/to/your/repo --embeddings
 ```
 
 ## Installation
+
+### Option 1: Install from npm (Recommended)
+
+```bash
+# Install globally
+npm install -g @vezlo/src-to-kb
+
+# Now use anywhere
+src-to-kb /path/to/repo
+src-to-kb-search search "your query"
+src-to-kb-mcp  # Start MCP server
+```
+
+### Option 2: Install locally in a project
+
+```bash
+# Install as a dependency
+npm install @vezlo/src-to-kb
+
+# Use with npx
+npx src-to-kb /path/to/repo
+npx src-to-kb-search search "your query"
+```
+
+### Option 3: Clone from GitHub
 
 ```bash
 # Clone the repository
 git clone https://github.com/vezlo/src-to-kb.git
 cd src-to-kb
 
-# Install dependencies (only needed for MCP server)
+# Install dependencies
 npm install
 
-# Run the generator
+# Run directly
 node kb-generator.js /path/to/repo
 ```
 
@@ -125,8 +154,8 @@ node test.js
 {
   "mcpServers": {
     "src-to-kb": {
-      "command": "node",
-      "args": ["/path/to/src-to-kb/mcp-server.mjs"],
+      "command": "npx",
+      "args": ["@vezlo/src-to-kb-mcp"],
       "env": {
         "OPENAI_API_KEY": "optional-api-key"
       }

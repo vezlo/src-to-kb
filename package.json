@@ -1,33 +1,49 @@
 {
-  "name": "src-to-kb",
+  "name": "@vezlo/src-to-kb",
   "version": "1.0.0",
-  "description": "Convert source code repositories into searchable knowledge bases with MCP support",
+  "description": "Convert source code repositories into searchable knowledge bases with MCP support for Claude and Cursor",
   "main": "kb-generator.js",
+  "type": "commonjs",
   "bin": {
-    "src-to-kb": "kb-generator.js",
-    "src-to-kb-search": "search.js",
-    "src-to-kb-mcp": "mcp-server.mjs"
+    "src-to-kb": "./kb-generator.js",
+    "src-to-kb-search": "./search.js",
+    "src-to-kb-mcp": "./mcp-server.mjs"
   },
   "scripts": {
     "start": "node kb-generator.js",
     "test": "node test.js",
     "example": "node kb-generator.js ../SaaSBot --output ./test-output",
     "search": "node search.js",
-    "mcp": "node mcp-server.mjs"
+    "mcp": "node mcp-server.mjs",
+    "prepublishOnly": "npm test"
   },
   "keywords": [
     "knowledge-base",
     "source-code",
+    "code-analysis",
     "embeddings",
     "chunking",
-    "code-analysis",
     "documentation",
     "mcp",
+    "model-context-protocol",
     "claude",
-    "cursor"
+    "claude-code",
+    "cursor",
+    "ai-tools",
+    "rag",
+    "code-search",
+    "codebase-analysis"
   ],
-  "author": "",
+  "author": "Vezlo <ashaheen@workhub.ai>",
   "license": "AGPL-3.0",
+  "homepage": "https://github.com/vezlo/src-to-kb#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vezlo/src-to-kb.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vezlo/src-to-kb/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0"
   },

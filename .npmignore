@@ -1,0 +1,46 @@
+# Test files and directories
+test-*
+test.js
+*.test.js
+
+# Output directories
+knowledge-base/
+*-kb/
+saasbot-kb/
+test-output/
+
+# Development files
+.git/
+.gitignore
+*.log
+npm-debug.log*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation files that are not essential
+docs/
+examples/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Environment files
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+
+# GitHub specific
+.github/
