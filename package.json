@@ -1,0 +1,27 @@
+{
+  "name": "src-to-kb",
+  "version": "1.0.0",
+  "description": "Convert source code repositories into searchable knowledge bases",
+  "main": "kb-generator.js",
+  "scripts": {
+    "start": "node kb-generator.js",
+    "test": "node test.js",
+    "example": "node kb-generator.js ../SaaSBot --output ./test-output",
+    "search": "node search.js"
+  },
+  "keywords": [
+    "knowledge-base",
+    "source-code",
+    "embeddings",
+    "chunking",
+    "code-analysis",
+    "documentation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
