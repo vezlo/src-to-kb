@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.1] - 2025-09-27
+
+### Fixed
+- 🔧 **Swagger Documentation**: All API endpoints now properly display in Swagger UI
+- 📚 **API Spec**: Created separate swagger-spec.js with complete OpenAPI specification
+- 🛠️ **Endpoint Paths**: Fixed path definitions for proper Swagger rendering
+
+### Improved
+- Enhanced API documentation with request/response examples
+- Better organization of endpoints by category
+- Added comprehensive schemas for all data models
+
 ## [1.3.0] - 2025-09-27
 
 ### Added
