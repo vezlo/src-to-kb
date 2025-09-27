@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.3.0] - 2025-09-27
+
+### Added
+- 🌐 **REST API Server**: Comprehensive REST API with Swagger/OpenAPI documentation
+- 📚 **Interactive API Docs**: Swagger UI available at `/api/v1/docs`
+- 🔐 **API Authentication**: Optional API key authentication via `X-API-Key` header
+- ⚡ **Async Processing**: Background knowledge base generation with status tracking
+- 📁 **File Upload**: Process individual files via multipart upload
+- 🔍 **Advanced Search API**: Search endpoints with mode selection support
+- 📊 **Statistics Endpoints**: Get detailed KB analytics via API
+- 🛡️ **Security Middleware**: Rate limiting, Helmet, CORS, compression
+- 📝 **API Documentation**: Complete API_DOCUMENTATION.md with examples
+
+### Features
+- New CLI command: `src-to-kb-api` to start REST API server
+- All core functionality exposed via REST endpoints
+- Support for JavaScript, Python, cURL clients
+- WebSocket support planned for future releases
+
+## [1.2.0] - 2025-09-27
+
+### Added
+- 🎯 **Answer Modes**: Three distinct modes for different user types
+  - `enduser` - Simplified, non-technical answers
+  - `developer` - Full technical details with architecture info (default)
+  - `copilot` - Code-focused answers with implementation examples
+- 🔍 **Mode-based Filtering**: Each mode filters results appropriately
+- 💡 **Custom AI Prompts**: Tailored prompts for each mode
+- 📋 **Mode Selection**: `--mode` flag for search command
+- 📊 **Modes Command**: New `modes` command to list available modes
+
+### Changed
+- Search now displays current mode when executing
+- AI answers are formatted based on selected mode
+- Result filtering excludes test files for end users
+- Enhanced search relevance based on user type
+
+### Documentation
+- Added comprehensive Answer Modes section to README
+- Updated examples to showcase different modes
+- Added mode usage in Complete Example Workflow
+
+## [1.1.12] - 2025-09-27
+
+### Added
+- 📝 **CONTRIBUTING.md**: Guidelines for contributing to the project
+- 💬 **GitHub Discussions**: Enabled for community Q&A and feature requests
+- 🤝 **Contribution Guide**: Clear instructions for reporting issues and submitting PRs
+
+### Changed
+- Updated license reference from MIT to AGPL-3.0 in contributing docs
+- Added code of conduct for community interactions
+
 ## [1.1.11] - 2025-09-26
 
 ### Fixed
