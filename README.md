@@ -19,6 +19,7 @@ After installation, you'll have access to these commands:
 ## Features
 
 - 📁 **Multi-language Support**: JavaScript, TypeScript, Python, Java, C++, Go, Rust, and more
+- 🎯 **Answer Modes**: Three modes for different users - End User (simple), Developer (technical), Copilot (code-focused)
 - 🔍 **Smart Chunking**: Intelligent code splitting with configurable overlap
 - 🧹 **Code Cleaning**: Optional comment removal and whitespace normalization
 - 🔢 **Embeddings**: Optional OpenAI embeddings for semantic search
@@ -58,25 +59,61 @@ export OPENAI_API_KEY=your-api-key-here
 src-to-kb /path/to/your/repo --embeddings
 ```
 
-### 4. Search the Knowledge Base
+### 4. Search with Answer Modes
 
-**IMPORTANT**: First generate a knowledge base, then search it:
+Choose the right answer mode for your needs:
 
 ```bash
-# Step 1: Generate a knowledge base
+# First generate a knowledge base
 src-to-kb ./your-project --output ./project-kb
 
-# Step 2: Search the knowledge base
-src-to-kb-search search "where is login path" --kb ./project-kb
+# Search with different modes:
 
-# Or if using default location (./knowledge-base):
-src-to-kb ./your-project
-src-to-kb-search search "authentication implementation"
+# End User Mode - Simple, non-technical answers
+src-to-kb-search search "how do I reset password?" --kb ./project-kb --mode enduser
 
-# Other search commands:
-src-to-kb-search stats --kb ./project-kb
-src-to-kb-search type JavaScript --kb ./project-kb
+# Developer Mode - Technical details and architecture (default)
+src-to-kb-search search "authentication flow" --kb ./project-kb --mode developer
+
+# Copilot Mode - Code examples and implementation patterns
+src-to-kb-search search "implement user login" --kb ./project-kb --mode copilot
+
+# View available modes
+src-to-kb-search modes
 ```
+
+## Answer Modes 🎯
+
+The search tool adapts its responses based on who's asking:
+
+| Mode | For | Description | Example Use Case |
+|------|-----|-------------|------------------|
+| **`enduser`** | Non-technical users | Simple explanations without technical jargon, focuses on features and capabilities | Product managers, business stakeholders asking about features |
+| **`developer`** | Software developers | Full technical details including architecture, dependencies, and implementation details | Engineers understanding codebase structure and design patterns |
+| **`copilot`** | Coding assistance | Code examples, snippets, and implementation patterns ready to use | Developers looking for code to copy/adapt for their implementation |
+
+### Mode Examples
+
+```bash
+# CEO asks: "What payment methods do we support?"
+src-to-kb-search search "payment methods" --mode enduser
+# Returns: Simple list of supported payment options
+
+# Developer asks: "How is payment processing implemented?"
+src-to-kb-search search "payment processing" --mode developer
+# Returns: Technical details about payment gateway integration, API endpoints, error handling
+
+# Developer needs: "Show me payment integration code"
+src-to-kb-search search "payment integration" --mode copilot
+# Returns: Actual code snippets for payment implementation
+```
+
+### How Modes Work
+
+- **Filtering**: Each mode filters results differently (e.g., end users don't see test files)
+- **AI Prompts**: Custom prompts guide AI to give appropriate responses
+- **Formatting**: Answers are formatted based on the audience (code blocks for developers, plain text for end users)
+- **Context**: Technical depth is adjusted (high for developers, low for end users)
 
 ## Installation
 
@@ -147,15 +184,25 @@ Options:
 # 1. Generate knowledge base from your frontend code
 src-to-kb ./frontend/ --output ./frontend-kb
 
-# 2. Search for specific functionality
-src-to-kb-search search "forgot password" --kb ./frontend-kb
-src-to-kb-search search "authentication flow" --kb ./frontend-kb
+# 2. Different users asking different questions:
+
+# Product Manager asks about features
+src-to-kb-search search "password reset feature" --kb ./frontend-kb --mode enduser
+
+# Developer investigates technical implementation
+src-to-kb-search search "authentication flow" --kb ./frontend-kb --mode developer
+
+# Developer needs code examples
+src-to-kb-search search "login component implementation" --kb ./frontend-kb --mode copilot
 
 # 3. Get statistics about the codebase
 src-to-kb-search stats --kb ./frontend-kb
 
 # 4. List all TypeScript files
 src-to-kb-search type TypeScript --kb ./frontend-kb
+
+# 5. View available answer modes
+src-to-kb-search modes
 ```
 
 ## More Examples
