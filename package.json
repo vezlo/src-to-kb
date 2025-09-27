@@ -1,6 +1,6 @@
 {
   "name": "@vezlo/src-to-kb",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Convert source code repositories into searchable knowledge bases with MCP support for Claude and Cursor",
   "main": "kb-generator.js",
   "type": "commonjs",
@@ -8,7 +8,8 @@
     "src-to-kb": "./kb-generator.js",
     "src-to-kb-search": "./search.js",
     "src-to-kb-mcp": "./mcp-server.mjs",
-    "src-to-kb-mcp-install": "./install-mcp.js"
+    "src-to-kb-mcp-install": "./install-mcp.js",
+    "src-to-kb-api": "./api-server.js"
   },
   "scripts": {
     "start": "node kb-generator.js",
@@ -16,6 +17,8 @@
     "example": "node kb-generator.js ../SaaSBot --output ./test-output",
     "search": "node search.js",
     "mcp": "node mcp-server.mjs",
+    "api": "node api-server.js",
+    "api:dev": "PORT=3000 API_KEY=dev-key nodemon api-server.js",
     "publish-package": "./scripts/publish.sh",
     "prepublishOnly": "npm test"
   },
@@ -47,9 +50,19 @@
     "url": "https://github.com/vezlo/src-to-kb/issues"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.5.0"
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "body-parser": "^2.2.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">=14.0.0"
   }

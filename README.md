@@ -13,6 +13,7 @@ After installation, you'll have access to these commands:
 
 - **`src-to-kb`** - Generate knowledge base from source code
 - **`src-to-kb-search`** - Search the knowledge base
+- **`src-to-kb-api`** - Start REST API server with Swagger docs
 - **`src-to-kb-mcp`** - Start MCP server for IDE integration
 - **`src-to-kb-mcp-install`** - Auto-configure Claude Code/Cursor
 
@@ -20,6 +21,7 @@ After installation, you'll have access to these commands:
 
 - 📁 **Multi-language Support**: JavaScript, TypeScript, Python, Java, C++, Go, Rust, and more
 - 🎯 **Answer Modes**: Three modes for different users - End User (simple), Developer (technical), Copilot (code-focused)
+- 🌐 **REST API**: Full-featured API with Swagger documentation for integration with external services
 - 🔍 **Smart Chunking**: Intelligent code splitting with configurable overlap
 - 🧹 **Code Cleaning**: Optional comment removal and whitespace normalization
 - 🔢 **Embeddings**: Optional OpenAI embeddings for semantic search
@@ -28,6 +30,7 @@ After installation, you'll have access to these commands:
 - 💾 **Structured Storage**: Organized JSON output for easy integration
 - 🤖 **MCP Server**: Direct integration with Claude Code, Cursor, and other MCP-compatible tools
 - 💡 **AI-Powered Search**: Uses OpenAI GPT-5 (latest reasoning model) for intelligent query understanding and helpful answers
+- 🔐 **API Authentication**: Optional API key authentication for secure access
 
 ## Quick Start
 
@@ -253,6 +256,69 @@ node test.js
 # 4. Test chunking on large files
 # 5. Verify language detection
 ```
+
+## REST API Server
+
+The Source-to-KB REST API provides programmatic access to all functionality with comprehensive Swagger documentation.
+
+### Starting the API Server
+
+```bash
+# Start with defaults (port 3000, no authentication)
+src-to-kb-api
+
+# With custom port and API key
+PORT=8080 API_KEY=your-secret-key src-to-kb-api
+
+# With all options
+PORT=8080 API_KEY=secret OPENAI_API_KEY=sk-... src-to-kb-api
+```
+
+### API Documentation
+
+Once started, visit: `http://localhost:3000/api/v1/docs` for interactive Swagger UI
+
+### Key Endpoints
+
+- `POST /api/v1/knowledge-bases` - Create new knowledge base
+- `POST /api/v1/search` - Search with mode selection
+- `GET /api/v1/modes` - List available answer modes
+- `GET /api/v1/statistics/{id}` - Get KB statistics
+- `POST /api/v1/process-file` - Process single file
+
+### Example API Usage
+
+```javascript
+// Create knowledge base
+const response = await fetch('http://localhost:3000/api/v1/knowledge-bases', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-Key': 'your-api-key'
+  },
+  body: JSON.stringify({
+    name: 'My Project',
+    sourcePath: '/path/to/project',
+    options: { chunkSize: 1500 }
+  })
+});
+
+// Search with mode
+const searchResponse = await fetch('http://localhost:3000/api/v1/search', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-Key': 'your-api-key'
+  },
+  body: JSON.stringify({
+    query: 'authentication',
+    knowledgeBaseId: 'abc123',
+    mode: 'developer'
+  })
+});
+```
+
+For complete API documentation, see [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
 
 ## MCP Server for Claude Code
 

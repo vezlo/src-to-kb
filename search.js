@@ -395,6 +395,9 @@ class KnowledgeBaseSearch {
   }
 }
 
+// Export for use as module
+module.exports = { KnowledgeBaseSearch };
+
 // CLI Interface
 if (require.main === module) {
   (async () => {
