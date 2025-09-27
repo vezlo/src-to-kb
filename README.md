@@ -265,6 +265,24 @@ See [MCP_SETUP.md](MCP_SETUP.md) for manual setup and [MCP_TOOLS_GUIDE.md](MCP_T
 
 ## Searching the Knowledge Base
 
+### Answer Modes
+
+The search tool supports three different answer modes to tailor responses based on your needs:
+
+- **`enduser`**: Simplified answers for non-technical users, focusing on features and capabilities
+- **`developer`**: Detailed technical answers including architecture and implementation details (default)
+- **`copilot`**: Code-focused answers with examples and patterns for implementation
+
+```bash
+# Examples with different modes
+src-to-kb-search search "how to use API?" --mode enduser      # Simple explanation
+src-to-kb-search search "authentication flow" --mode developer # Technical details
+src-to-kb-search search "login implementation" --mode copilot  # Code examples
+
+# List available modes
+src-to-kb-search modes
+```
+
 ### AI-Powered Search (with OpenAI)
 
 When `OPENAI_API_KEY` is set, searches use GPT-5 (OpenAI's latest reasoning model) for intelligent answers:
@@ -273,9 +291,9 @@ When `OPENAI_API_KEY` is set, searches use GPT-5 (OpenAI's latest reasoning mode
 # Set your OpenAI API key
 export OPENAI_API_KEY=your-api-key-here
 
-# Get intelligent, context-aware answers
-src-to-kb-search search "how does authentication work?" --kb ./project-kb
-src-to-kb-search search "where is password reset?" --kb ./project-kb
+# Get intelligent, context-aware answers with mode selection
+src-to-kb-search search "how does authentication work?" --kb ./project-kb --mode developer
+src-to-kb-search search "where is password reset?" --kb ./project-kb --mode enduser
 ```
 
 ### Basic Search (without OpenAI)
@@ -301,6 +319,9 @@ src-to-kb-search similar src/index.js --kb ./project-kb
 ```bash
 # Specify knowledge base path
 src-to-kb-search search "query" --kb ./my-knowledge-base
+
+# Select answer mode
+src-to-kb-search search "query" --mode enduser|developer|copilot
 
 # Show detailed evidence
 src-to-kb-search search "query" --verbose

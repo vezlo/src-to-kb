@@ -2,12 +2,14 @@
 
 const fs = require('fs');
 const path = require('path');
+const { AnswerModeManager } = require('./modes');
 
 class KnowledgeBaseSearch {
-  constructor(kbPath = './knowledge-base') {
+  constructor(kbPath = './knowledge-base', mode = 'developer') {
     this.kbPath = kbPath;
     this.documents = new Map();
     this.chunks = new Map();
+    this.modeManager = new AnswerModeManager(mode);
     this.loadKnowledgeBase();
   }
 
@@ -106,9 +108,12 @@ class KnowledgeBaseSearch {
     // Sort by relevance score
     results.sort((a, b) => b.score - a.score);
 
+    // Apply mode-based filtering
+    const filteredResults = this.modeManager.filterResults(results);
+
     // Apply limit
     const limit = options.limit || 10;
-    return results.slice(0, limit);
+    return filteredResults.slice(0, limit);
   }
 
   async generateAnswerWithAI(query, searchResults) {
@@ -134,6 +139,9 @@ class KnowledgeBaseSearch {
         content: r.fullContent || r.preview
       }));
 
+      // Generate mode-specific prompt
+      const aiPrompt = this.modeManager.generateAIPrompt(query, context);
+
       // Use OpenAI GPT-5 with Responses API
       const initialResponse = await fetch('https://api.openai.com/v1/responses', {
         method: 'POST',
@@ -143,12 +151,7 @@ class KnowledgeBaseSearch {
         },
         body: JSON.stringify({
           model: 'gpt-5',
-          input: `Query: "${query}"
-
-Search Results from codebase:
-${context.slice(0, 3).map(r => `File: ${r.file}\nContent: ${r.content.substring(0, 500)}...`).join('\n\n')}
-
-Based on these search results, provide a helpful answer about what the code supports.`,
+          input: aiPrompt,
           reasoning: { effort: "low" },
           text: { verbosity: "low" },
           max_output_tokens: 2000
@@ -218,12 +221,19 @@ Based on these search results, provide a helpful answer about what the code supp
       if (aiAnswer) {
         const relevantFiles = [...new Set(searchResults.slice(0, 5).map(r => r.documentPath))];
 
+        // Format answer based on mode
+        const formattedAnswer = this.modeManager.formatAnswer(
+          aiAnswer + `\n\n📂 **Source files**: ${relevantFiles.slice(0, 3).join(', ')}`,
+          searchResults
+        );
+
         return {
-          answer: aiAnswer + `\n\n📂 **Source files**: ${relevantFiles.slice(0, 3).join(', ')}`,
+          answer: formattedAnswer,
           confidence: 0.85,
           totalMatches: searchResults.length,
           topFiles: relevantFiles,
-          aiGenerated: true
+          aiGenerated: true,
+          mode: this.modeManager.getCurrentMode().name
         };
       } else {
         console.error('❌ No recognized output field in response. Available fields:', Object.keys(data));
@@ -283,10 +293,11 @@ Based on these search results, provide a helpful answer about what the code supp
     answer += `\n💡 To get AI-powered answers, set OPENAI_API_KEY environment variable.`;
 
     return {
-      answer: answer,
+      answer: this.modeManager.formatAnswer(answer, searchResults),
       confidence: confidence,
       totalMatches: searchResults.length,
-      topFiles: relevantFiles
+      topFiles: relevantFiles,
+      mode: this.modeManager.getCurrentMode().name
     };
   }
 
@@ -333,6 +344,18 @@ Based on these search results, provide a helpful answer about what the code supp
     });
 
     return stats;
+  }
+
+  setMode(mode) {
+    return this.modeManager.setMode(mode);
+  }
+
+  getAvailableModes() {
+    return this.modeManager.getAvailableModes();
+  }
+
+  getCurrentMode() {
+    return this.modeManager.getCurrentMode();
   }
 
   findSimilarFiles(filePath) {
@@ -389,20 +412,24 @@ Commands:
   type <type>        List all files of a specific type/language
   stats              Show knowledge base statistics
   similar <file>     Find files similar to the given file path
+  modes              List available answer modes
 
 Search Options:
   --kb <path>        Path to knowledge base (default: ./knowledge-base)
   --limit <n>        Limit number of results (default: 10)
+  --mode <mode>      Answer mode: enduser, developer, copilot (default: developer)
   --verbose          Show detailed evidence for answers
   --raw              Show raw search results (old format)
 
 Examples:
-  node search.js search "does it support any language"
-  node search.js search "initialize app" --verbose
-  node search.js search "what languages" --raw
+  node search.js search "does it support any language" --mode enduser
+  node search.js search "initialize app" --mode developer --verbose
+  node search.js search "what languages" --mode copilot
+  node search.js search "how to use API" --raw
   node search.js type JavaScript
   node search.js stats
   node search.js similar src/index.js
+  node search.js modes
     `);
     process.exit(0);
   }
@@ -412,7 +439,11 @@ Examples:
     ? args[args.indexOf('--kb') + 1]
     : './knowledge-base';
 
-  const searcher = new KnowledgeBaseSearch(kbPath);
+  const mode = args.includes('--mode')
+    ? args[args.indexOf('--mode') + 1]
+    : 'developer';
+
+  const searcher = new KnowledgeBaseSearch(kbPath, mode);
 
   switch (command) {
     case 'search': {
@@ -426,7 +457,7 @@ Examples:
       for (let i = 1; i < args.length; i++) {
         if (args[i].startsWith('--')) {
           // Skip flag and its value (if any)
-          if (args[i] === '--kb' || args[i] === '--limit') {
+          if (args[i] === '--kb' || args[i] === '--limit' || args[i] === '--mode') {
             i++; // Skip the next argument (the value)
           }
           // Other boolean flags like --verbose, --raw don't have values
@@ -440,7 +471,8 @@ Examples:
         : 10;
       const verbose = args.includes('--verbose');
 
-      console.log(`\n🔍 Searching for: "${query}"\n`);
+      console.log(`\n🔍 Searching for: "${query}"`);
+      console.log(`📋 Mode: ${searcher.getCurrentMode().name}\n`);
 
       const results = searcher.search(query, { limit });
       // Use AI-powered answer generation if available
@@ -551,6 +583,24 @@ Examples:
           console.log();
         });
       }
+      break;
+    }
+
+    case 'modes': {
+      console.log('\n🎯 Available Answer Modes\n');
+      console.log('─'.repeat(50));
+
+      const modes = searcher.getAvailableModes();
+      modes.forEach(mode => {
+        const isCurrent = mode.key === searcher.getCurrentMode().key;
+        const marker = isCurrent ? '→' : ' ';
+        console.log(`${marker} ${mode.key.padEnd(12)} - ${mode.name}`);
+        console.log(`  ${' '.repeat(14)}${mode.description}`);
+        console.log();
+      });
+
+      console.log('💡 Use --mode <mode> flag when searching to select a mode');
+      console.log('Example: node search.js search "API docs" --mode enduser');
       break;
     }
 
