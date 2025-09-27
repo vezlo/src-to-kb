@@ -34,6 +34,24 @@ After installation, you'll have access to these commands:
 
 ## Quick Start
 
+### 🚀 For Existing Projects (Next.js, React, etc.)
+
+```bash
+# Install globally
+npm install -g @vezlo/src-to-kb
+
+# Generate KB from your project
+src-to-kb ./my-nextjs-app --output ./my-kb
+
+# Start API server
+src-to-kb-api
+
+# Search your codebase
+src-to-kb-search search "How does routing work?" --mode developer
+```
+
+**That's it!** Your codebase is now searchable with AI assistance.
+
 ### 1. Basic Usage
 
 Process your repository with default settings:
@@ -498,6 +516,101 @@ Each chunk contains:
   "endLine": 25,
   "size": 1000
 }
+```
+
+## 🔧 Integration with Existing Projects
+
+### Next.js / React Integration
+
+Transform your frontend codebase into a searchable knowledge base with AI-powered assistance:
+
+#### Quick Setup
+
+```bash
+# 1. Generate knowledge base from your project
+src-to-kb /path/to/nextjs-app --output ./nextjs-kb
+
+# 2. Start the API server
+src-to-kb-api
+
+# 3. Query your codebase
+curl -X POST http://localhost:3000/api/v1/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "How is authentication implemented?", "knowledgeBaseId": "your-kb-id", "mode": "developer"}'
+```
+
+#### React Component Example
+
+```jsx
+// components/CodeSearch.jsx
+import { useState } from 'react';
+
+export default function CodeSearch() {
+  const [query, setQuery] = useState('');
+  const [result, setResult] = useState(null);
+
+  const search = async () => {
+    const response = await fetch('http://localhost:3000/api/v1/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query,
+        knowledgeBaseId: 'your-kb-id',
+        mode: 'developer'
+      })
+    });
+    const data = await response.json();
+    setResult(data);
+  };
+
+  return (
+    <div>
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Ask about your codebase..."
+      />
+      <button onClick={search}>Search</button>
+      {result && <div>{result.answer}</div>}
+    </div>
+  );
+}
+```
+
+#### Integration Ideas
+
+- **🎓 Onboarding Assistant**: Help new developers understand your codebase
+- **📖 In-App Documentation**: Provide context-aware help within your application
+- **🔍 Code Review Helper**: Find similar patterns and best practices
+- **🤖 Development Copilot**: Get AI suggestions based on your existing code
+- **📊 Code Analytics Dashboard**: Visualize codebase statistics and complexity
+
+### CI/CD Integration
+
+```yaml
+# GitHub Actions example
+name: Update Knowledge Base
+on: [push]
+jobs:
+  update-kb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm install -g @vezlo/src-to-kb
+      - run: src-to-kb . --output ./kb
+      # Upload KB as artifact or deploy to server
+```
+
+### Enterprise Setup
+
+For production environments:
+
+```bash
+# Start with authentication and custom port
+API_KEY=secure-key PORT=8080 src-to-kb-api
+
+# Use with Docker
+docker run -p 3000:3000 -e API_KEY=secret vezlo/src-to-kb-api
 ```
 
 ## Use Cases

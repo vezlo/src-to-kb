@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.2] - 2025-09-27
+
+### Documentation
+- 📚 **Integration Guide**: Added comprehensive section for Next.js/React integration
+- 🚀 **Quick Start**: Added fast-track setup for existing projects
+- 💡 **Usage Examples**: Added React component examples and integration patterns
+- 🏢 **Enterprise Setup**: Added production deployment guidance
+- 🔄 **CI/CD Examples**: Added GitHub Actions integration example
+
+### Added
+- React component code examples for search integration
+- Multiple integration patterns (onboarding, documentation, code review)
+- Enterprise deployment configurations
+
 ## [1.3.1] - 2025-09-27
 
 ### Fixed
