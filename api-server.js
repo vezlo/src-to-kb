@@ -55,8 +55,8 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger-spec');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
@@ -101,97 +101,8 @@ const upload = multer({
   }
 });
 
-// Swagger configuration
-const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Source-to-KB API',
-      version: '1.0.0',
-      description: 'REST API for converting source code repositories into searchable knowledge bases',
-      contact: {
-        name: 'API Support',
-        url: 'https://github.com/vezlo/src-to-kb',
-        email: 'support@example.com'
-      },
-      license: {
-        name: 'AGPL-3.0',
-        url: 'https://www.gnu.org/licenses/agpl-3.0.html'
-      }
-    },
-    servers: [
-      {
-        url: `http://localhost:${PORT}/api/v1`,
-        description: 'Development server'
-      },
-      {
-        url: 'https://api.src-to-kb.com/v1',
-        description: 'Production server'
-      }
-    ],
-    components: {
-      securitySchemes: {
-        ApiKeyAuth: {
-          type: 'apiKey',
-          in: 'header',
-          name: 'X-API-Key'
-        }
-      },
-      schemas: {
-        KnowledgeBase: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            name: { type: 'string' },
-            path: { type: 'string' },
-            createdAt: { type: 'string', format: 'date-time' },
-            stats: {
-              type: 'object',
-              properties: {
-                filesProcessed: { type: 'integer' },
-                totalSize: { type: 'integer' },
-                totalChunks: { type: 'integer' },
-                languages: { type: 'object' }
-              }
-            }
-          }
-        },
-        SearchResult: {
-          type: 'object',
-          properties: {
-            answer: { type: 'string' },
-            confidence: { type: 'number' },
-            totalMatches: { type: 'integer' },
-            mode: { type: 'string' },
-            topFiles: {
-              type: 'array',
-              items: { type: 'string' }
-            }
-          }
-        },
-        Mode: {
-          type: 'object',
-          properties: {
-            key: { type: 'string' },
-            name: { type: 'string' },
-            description: { type: 'string' }
-          }
-        },
-        Error: {
-          type: 'object',
-          properties: {
-            error: { type: 'string' },
-            message: { type: 'string' },
-            code: { type: 'integer' }
-          }
-        }
-      }
-    }
-  },
-  apis: ['./api-server.js', './api-routes/*.js']
-};
-
-const swaggerSpec = swaggerJsdoc(swaggerOptions);
+// Update Swagger spec with current port
+swaggerSpec.servers[0].variables.port.default = PORT.toString();
 
 // Middleware
 app.use(helmet());
