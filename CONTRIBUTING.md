@@ -69,4 +69,4 @@ Feel free to ask questions in our [GitHub Discussions](https://github.com/vezlo/
 
 ## License
 
-By contributing to src-to-kb, you agree that your contributions will be licensed under the same license as the project (MIT).
+By contributing to src-to-kb, you agree that your contributions will be licensed under the same license as the project (AGPL-3.0).
