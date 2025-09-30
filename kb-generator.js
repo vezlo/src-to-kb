@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { EventEmitter } = require('events');
+const { ExternalServerService } = require('./external-server-service');
 
 class KnowledgeBaseGenerator extends EventEmitter {
   constructor(config = {}) {
@@ -36,6 +37,20 @@ class KnowledgeBaseGenerator extends EventEmitter {
       errors: []
     };
 
+    // 🆕 NEW: Global external server enable flag
+    this.useExternalServer = process.env.USE_EXTERNAL_KB === 'true';
+    
+    // Initialize external server service only if enabled
+    if (this.useExternalServer) {
+      this.externalServer = new ExternalServerService();
+      const extConfig = this.externalServer.getConfig();
+      console.log('🌐 External server enabled');
+      console.log(`   URL: ${extConfig.url}`);
+      console.log(`   Max file size: ${(extConfig.maxFileSize / 1024 / 1024).toFixed(1)}MB`);
+    } else {
+      console.log('📁 Local processing mode');
+    }
+
     this.initializeOutputDirectory();
   }
 
@@ -65,9 +80,19 @@ class KnowledgeBaseGenerator extends EventEmitter {
     const files = this.scanDirectory(repoPath, options.maxDepth || 10);
     console.log(`📁 Found ${files.length} files to process\n`);
 
-    for (const filePath of files) {
+    for (let i = 0; i < files.length; i++) {
+      const filePath = files[i];
+      const progress = `[${i + 1}/${files.length}]`;
+      
       try {
+        console.log(`\n${progress} Processing file...`);
         await this.processFile(filePath, repoPath);
+        
+        // Add spacing between files
+        if (i < files.length - 1) {
+          console.log(''); // Empty line for spacing
+        }
+        
       } catch (error) {
         console.error(`❌ Error processing ${filePath}: ${error.message}`);
         this.stats.errors.push({ file: filePath, error: error.message });
@@ -153,19 +178,12 @@ class KnowledgeBaseGenerator extends EventEmitter {
       chunks: []
     };
 
-    // Clean content
-    const cleanedContent = this.cleanContent(content, document.metadata.type);
-
-    // Create chunks
-    document.chunks = this.createChunks(cleanedContent, document.id);
-
-    // Generate embeddings if configured
-    if (this.config.generateEmbeddings && this.config.openaiApiKey) {
-      await this.generateEmbeddings(document);
+    // 🆕 NEW: Choose processing method
+    if (this.useExternalServer) {
+      await this.processWithExternalServer(document);
+    } else {
+      await this.processLocally(document);
     }
-
-    // Save document
-    await this.saveDocument(document);
 
     this.documents.set(document.id, document);
     this.stats.filesProcessed++;
@@ -177,6 +195,50 @@ class KnowledgeBaseGenerator extends EventEmitter {
       documentId: document.id,
       chunks: document.chunks.length
     });
+  }
+
+  // 🆕 NEW: External server processing
+  async processWithExternalServer(document) {
+    try {
+      const options = {
+        chunkSize: this.config.chunkSize,
+        chunkOverlap: this.config.chunkOverlap,
+        generateEmbeddings: this.config.generateEmbeddings
+      };
+
+      const result = await this.externalServer.sendDocument(document, options);
+      
+      // Store external server response
+      document.externalId = result.id || result.documentId;
+      document.externalChunks = result.chunkIds || [];
+      document.externalResult = result;
+      
+      console.log(`✅ External server processed: ${document.relativePath}`);
+      
+    } catch (error) {
+      console.warn(`⚠️  External server failed for ${document.relativePath}: ${error.message}`);
+      console.log(`🔄 Falling back to local processing...`);
+      
+      // Fallback to local processing
+      await this.processLocally(document);
+    }
+  }
+
+  // 🆕 NEW: Local processing (extracted from original)
+  async processLocally(document) {
+    // Clean content
+    const cleanedContent = this.cleanContent(document.content, document.metadata.type);
+
+    // Create chunks
+    document.chunks = this.createChunks(cleanedContent, document.id);
+
+    // Generate embeddings if configured
+    if (this.config.generateEmbeddings && this.config.openaiApiKey) {
+      await this.generateEmbeddings(document);
+    }
+
+    // Save document
+    await this.saveDocument(document);
   }
 
   cleanContent(content, type) {

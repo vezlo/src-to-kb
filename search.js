@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { AnswerModeManager } = require('./modes');
+const { ExternalServerService } = require('./external-server-service');
 
 class KnowledgeBaseSearch {
   constructor(kbPath = './knowledge-base', mode = 'developer') {
@@ -10,7 +11,16 @@ class KnowledgeBaseSearch {
     this.documents = new Map();
     this.chunks = new Map();
     this.modeManager = new AnswerModeManager(mode);
-    this.loadKnowledgeBase();
+    
+    // 🆕 NEW: Check if external server is enabled
+    this.useExternalServer = process.env.USE_EXTERNAL_KB === 'true';
+    
+    if (this.useExternalServer) {
+      this.externalServer = new ExternalServerService();
+      console.log('🌐 External server search enabled');
+    } else {
+      this.loadKnowledgeBase();
+    }
   }
 
   loadKnowledgeBase() {
@@ -44,7 +54,52 @@ class KnowledgeBaseSearch {
     console.log(`📚 Loaded ${this.documents.size} documents with chunks`);
   }
 
-  search(query, options = {}) {
+  async search(query, options = {}) {
+    // 🆕 NEW: Use external server if enabled
+    if (this.useExternalServer) {
+      return await this.searchExternal(query, options);
+    }
+    
+    // Local search logic
+    return this.searchLocal(query, options);
+  }
+
+  async searchExternal(query, options = {}) {
+    try {
+      console.log(`🔍 Searching external server: "${query}"`);
+      
+      const result = await this.externalServer.search(query, options);
+      
+      // Handle the response format from external server
+      if (result.response) {
+        console.log('✅ External server search completed');
+        return {
+          answer: result.response,
+          confidence: 0.9,
+          external: true,
+          mode: this.modeManager.getCurrentMode().name
+        };
+      } else {
+        // Fallback if response format is different
+        return {
+          answer: JSON.stringify(result, null, 2),
+          confidence: 0.8,
+          external: true,
+          mode: this.modeManager.getCurrentMode().name
+        };
+      }
+      
+    } catch (error) {
+      console.warn(`⚠️  External server search failed: ${error.message}`);
+      console.log(`🔄 Falling back to local search...`);
+      
+      // Fallback to local search
+      this.loadKnowledgeBase();
+      return this.searchLocal(query, options);
+    }
+  }
+
+  searchLocal(query, options = {}) {
     const results = [];
     const queryLower = query.toLowerCase();
     const keywords = queryLower.split(/\s+/);
@@ -477,9 +532,16 @@ Examples:
       console.log(`\n🔍 Searching for: "${query}"`);
       console.log(`📋 Mode: ${searcher.getCurrentMode().name}\n`);
 
-      const results = searcher.search(query, { limit });
-      // Use AI-powered answer generation if available
-      const answer = await searcher.generateAnswerWithAI(query, results);
+      const results = await searcher.search(query, { limit });
+      
+      // For external server, results already contain the answer
+      let answer;
+      if (results.external) {
+        answer = results;
+      } else {
+        // Use AI-powered answer generation for local search
+        answer = await searcher.generateAnswerWithAI(query, results);
+      }
 
       // Display human-friendly answer
       console.log('💡 Answer:');
@@ -506,12 +568,17 @@ Examples:
         console.log('\n📋 Raw Search Results:');
         console.log('─'.repeat(50));
 
-        results.forEach((result, index) => {
-          console.log(`${index + 1}. 📄 ${result.documentPath}`);
-          console.log(`   Lines: ${result.lines} | Score: ${result.score}`);
-          console.log(`   Preview: ${result.preview.substring(0, 100)}...`);
-          console.log();
-        });
+        if (results.external) {
+          console.log('External server response:');
+          console.log(JSON.stringify(results, null, 2));
+        } else {
+          results.forEach((result, index) => {
+            console.log(`${index + 1}. 📄 ${result.documentPath}`);
+            console.log(`   Lines: ${result.lines} | Score: ${result.score}`);
+            console.log(`   Preview: ${result.preview.substring(0, 100)}...`);
+            console.log();
+          });
+        }
       }
       break;
     }
@@ -543,24 +610,41 @@ Examples:
     case 'stats': {
       console.log('\n📊 Knowledge Base Statistics\n');
 
-      const stats = searcher.getStatistics();
+      if (searcher.useExternalServer) {
+        try {
+          console.log('🌐 Fetching statistics from external server...');
+          const stats = await searcher.externalServer.getStatistics();
+          console.log('✅ External server statistics:');
+          console.log(JSON.stringify(stats, null, 2));
+        } catch (error) {
+          console.warn(`⚠️  External server stats failed: ${error.message}`);
+          console.log('🔄 Falling back to local statistics...');
+          searcher.loadKnowledgeBase();
+          const stats = searcher.getStatistics();
+          console.log(`Total Documents: ${stats.totalDocuments}`);
+          console.log(`Total Chunks: ${stats.totalChunks}`);
+          console.log(`Total Size: ${(stats.totalSize / (1024 * 1024)).toFixed(2)} MB`);
+        }
+      } else {
+        const stats = searcher.getStatistics();
 
-      console.log(`Total Documents: ${stats.totalDocuments}`);
-      console.log(`Total Chunks: ${stats.totalChunks}`);
-      console.log(`Total Size: ${(stats.totalSize / (1024 * 1024)).toFixed(2)} MB`);
+        console.log(`Total Documents: ${stats.totalDocuments}`);
+        console.log(`Total Chunks: ${stats.totalChunks}`);
+        console.log(`Total Size: ${(stats.totalSize / (1024 * 1024)).toFixed(2)} MB`);
 
-      console.log('\nLanguages:');
-      Object.entries(stats.languages)
-        .sort((a, b) => b[1] - a[1])
-        .forEach(([lang, count]) => {
-          console.log(`  ${lang}: ${count} files`);
-        });
+        console.log('\nLanguages:');
+        Object.entries(stats.languages)
+          .sort((a, b) => b[1] - a[1])
+          .forEach(([lang, count]) => {
+            console.log(`  ${lang}: ${count} files`);
+          });
 
-      console.log('\nFile Types:');
-      Object.entries(stats.types)
-        .forEach(([type, count]) => {
-          console.log(`  ${type}: ${count} files`);
-        });
+        console.log('\nFile Types:');
+        Object.entries(stats.types)
+          .forEach(([type, count]) => {
+            console.log(`  ${type}: ${count} files`);
+          });
+      }
       break;
     }
 
