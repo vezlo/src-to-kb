@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.3.3] - 2025-09-30
+
+### Added
+- 🌐 **External Server Integration**: Added support for external knowledge base processing and search
+- 🔧 **External Server Configuration**: New `external-server-config.js` for centralized configuration management
+- 🚀 **External Server Service**: New `external-server-service.js` for API communication with external servers
+- 📚 **External Server Documentation**: Added `EXTERNAL_SERVER_ENV.md` with comprehensive setup guide
+- 🔄 **Hybrid Mode**: Automatic fallback to local processing if external server fails
+- ⚙️ **Environment Variables**: Support for `USE_EXTERNAL_KB`, `EXTERNAL_KB_URL`, `EXTERNAL_KB_SEARCH_URL`, etc.
+- 🎯 **Assistant Server**: Integration with [vezlo/assistant-server](https://github.com/vezlo/assistant-server) for immediate testing
+
+### Enhanced
+- 📤 **Generator**: Enhanced `kb-generator.js` with external server processing capability
+- 🔍 **Search**: Enhanced `search.js` with external server search integration
+- 🎯 **Progress Indicators**: Added better visual feedback and progress tracking for file processing
+- 🔗 **URL Generation**: Smart URL generation for search endpoints from base URLs
+
+### Features
+- **External Processing**: Send code files to external servers for chunking and embedding generation
+- **External Search**: Query external knowledge bases via REST API
+- **Retry Logic**: Configurable retry attempts and delays for external server communication
+- **Timeout Handling**: Request timeout management for external server calls
+- **Payload Customization**: Configurable payload structure for external server integration
+
 ## [1.3.2] - 2025-09-27
 
 ### Documentation

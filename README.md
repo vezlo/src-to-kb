@@ -31,6 +31,7 @@ After installation, you'll have access to these commands:
 - 🤖 **MCP Server**: Direct integration with Claude Code, Cursor, and other MCP-compatible tools
 - 💡 **AI-Powered Search**: Uses OpenAI GPT-5 (latest reasoning model) for intelligent query understanding and helpful answers
 - 🔐 **API Authentication**: Optional API key authentication for secure access
+- 🌐 **External Server Integration**: Send code to external servers for processing and search via REST API
 
 ## Quick Start
 
@@ -51,6 +52,28 @@ src-to-kb-search search "How does routing work?" --mode developer
 ```
 
 **That's it!** Your codebase is now searchable with AI assistance.
+
+## External Server Integration 🌐
+
+### 🚀 Try It Now with Public Demo Server
+
+Experience external server integration immediately with our production-ready assistant-server:
+
+```bash
+# Generate knowledge base using assistant-server
+USE_EXTERNAL_KB=true EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items src-to-kb ./your-repo
+
+# Search using assistant-server
+USE_EXTERNAL_KB=true EXTERNAL_KB_URL=https://your-assistant-server.com/api/search src-to-kb-search search "how does authentication work?"
+```
+
+**Assistant Server**: [vezlo/assistant-server](https://github.com/vezlo/assistant-server) - Production-ready Node.js/TypeScript API server with vector search and Docker deployment
+
+### 🏢 Enterprise Setup
+
+For production deployments or custom servers:
+
+📖 **Complete Guide**: [External Server Setup Guide](https://github.com/vezlo/src-to-kb/blob/main/EXTERNAL_SERVER_ENV.md)
 
 ### 1. Basic Usage
 
