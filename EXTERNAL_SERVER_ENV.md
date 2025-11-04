@@ -10,16 +10,22 @@ Try external server integration immediately with our production-ready assistant-
 
 ```bash
 # Using npm package (recommended)
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items src-to-kb ./your-repo
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items src-to-kb ./your-repo
+
+# With API key authentication
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items EXTERNAL_KB_API_KEY=your-api-key src-to-kb ./your-repo
 
 # Search using npm package
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=https://your-assistant-server.com/api/search src-to-kb-search search "authentication implementation"
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/search src-to-kb-search search "authentication implementation"
+
+# Search with API key
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/search EXTERNAL_KB_API_KEY=your-api-key src-to-kb-search search "authentication implementation"
 
 # Using npx (no installation)
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items npx @vezlo/src-to-kb ./your-repo
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items npx @vezlo/src-to-kb ./your-repo
 
 # Local development (if cloned from GitHub)
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=https://your-assistant-server.com/api/search node kb-generator.js ./your-repo
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/search node kb-generator.js ./your-repo
 ```
 
 ## Usage Examples
@@ -31,20 +37,29 @@ USE_EXTERNAL_KB=true EXTERNAL_KB_URL=https://your-assistant-server.com/api/searc
 # Install globally
 npm install -g @vezlo/src-to-kb
 
-# Generate KB with external server
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items src-to-kb ./my-repo
+# Generate KB with external server (automatically enabled when URL is set)
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items src-to-kb ./my-repo
+
+# With API key authentication
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items EXTERNAL_KB_API_KEY=your-api-key src-to-kb ./my-repo
 
 # Search with external server
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=http://localhost:3000/api/search src-to-kb-search search "authentication"
+EXTERNAL_KB_URL=http://localhost:3000/api/search src-to-kb-search search "authentication"
+
+# Search with API key
+EXTERNAL_KB_URL=http://localhost:3000/api/search EXTERNAL_KB_API_KEY=your-api-key src-to-kb-search search "authentication"
 ```
 
 #### Option 2: NPX (No Installation)
 ```bash
 # Generate KB with external server
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items npx @vezlo/src-to-kb ./my-repo
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items npx @vezlo/src-to-kb ./my-repo
+
+# With API key
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items EXTERNAL_KB_API_KEY=your-api-key npx @vezlo/src-to-kb ./my-repo
 
 # Search with external server
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=http://localhost:3000/api/search npx @vezlo/src-to-kb-search search "authentication"
+EXTERNAL_KB_URL=http://localhost:3000/api/search npx @vezlo/src-to-kb-search search "authentication"
 ```
 
 #### Option 3: Local Development
@@ -55,31 +70,38 @@ cd src-to-kb
 npm install
 
 # Generate KB with external server
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items node kb-generator.js ./my-repo
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items node kb-generator.js ./my-repo
+
+# With API key
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items EXTERNAL_KB_API_KEY=your-api-key node kb-generator.js ./my-repo
 
 # Search with external server
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=http://localhost:3000/api/search node search.js search "authentication"
+EXTERNAL_KB_URL=http://localhost:3000/api/search node search.js search "authentication"
 ```
 
 ## Environment Variables
 
 This document describes all environment variables for external server integration.
 
-## Required Variables (when USE_EXTERNAL_KB=true)
+## How External Server Mode Works
 
-### `USE_EXTERNAL_KB`
-- **Type**: Boolean
-- **Default**: `false`
-- **Description**: Enable external server mode
-- **Example**: `USE_EXTERNAL_KB=true`
+External server mode is **automatically enabled** when `EXTERNAL_KB_URL` is set. There is no separate enable flag. If the URL is not set, the tool falls back to local processing.
+
+## Required Variables (when using external server)
 
 ### `EXTERNAL_KB_URL`
 - **Type**: String
-- **Default**: `https://api.example.com/kb/process`
-- **Description**: External server endpoint for processing documents
+- **Default**: `undefined` (local mode)
+- **Description**: External server endpoint for processing documents. When set, automatically enables external server mode for both document processing and search
 - **Example**: `EXTERNAL_KB_URL=https://your-api.com/kb/process`
 
 ## Optional Variables
+
+### `EXTERNAL_KB_API_KEY`
+- **Type**: String
+- **Default**: `undefined`
+- **Description**: API key for authenticating with the external server. When provided, this key is sent in the `x-api-key` header with all requests
+- **Example**: `EXTERNAL_KB_API_KEY=your-secret-api-key-here`
 
 ### `EXTERNAL_KB_SEARCH_URL`
 - **Type**: String
@@ -98,18 +120,6 @@ This document describes all environment variables for external server integratio
 - **Default**: `30000` (30 seconds)
 - **Description**: Request timeout for external server calls
 - **Example**: `EXTERNAL_KB_TIMEOUT=60000` (60 seconds)
-
-### `EXTERNAL_KB_COMPANY_UUID`
-- **Type**: Number
-- **Default**: `1`
-- **Description**: Company UUID for payload
-- **Example**: `EXTERNAL_KB_COMPANY_UUID=123`
-
-### `EXTERNAL_KB_CREATED_BY_UUID`
-- **Type**: Number
-- **Default**: `1`
-- **Description**: Created by UUID for payload
-- **Example**: `EXTERNAL_KB_CREATED_BY_UUID=456`
 
 ### `EXTERNAL_KB_DOCUMENT_TYPE`
 - **Type**: String
@@ -133,8 +143,16 @@ This document describes all environment variables for external server integratio
 
 ### Basic External Server Setup
 ```bash
-export USE_EXTERNAL_KB=true
 export EXTERNAL_KB_URL=https://api.example.com/kb/process
+
+# Run the tool (external server automatically enabled)
+src-to-kb ./my-repo
+```
+
+### With API Key Authentication
+```bash
+export EXTERNAL_KB_URL=https://api.example.com/kb/process
+export EXTERNAL_KB_API_KEY=your-secret-api-key
 
 # Run the tool
 src-to-kb ./my-repo
@@ -142,12 +160,10 @@ src-to-kb ./my-repo
 
 ### Advanced Configuration
 ```bash
-export USE_EXTERNAL_KB=true
 export EXTERNAL_KB_URL=https://api.example.com/kb/process
+export EXTERNAL_KB_API_KEY=your-api-key
 export EXTERNAL_KB_MAX_FILE_SIZE=5242880  # 5MB
 export EXTERNAL_KB_TIMEOUT=60000          # 60 seconds
-export EXTERNAL_KB_COMPANY_UUID=123
-export EXTERNAL_KB_CREATED_BY_UUID=456
 export EXTERNAL_KB_RETRY_ATTEMPTS=5
 
 # Run the tool
@@ -156,8 +172,8 @@ src-to-kb ./my-repo
 
 ### Docker Environment
 ```bash
-docker run -e USE_EXTERNAL_KB=true \
-           -e EXTERNAL_KB_URL=https://api.example.com/kb/process \
+docker run -e EXTERNAL_KB_URL=https://api.example.com/kb/process \
+           -e EXTERNAL_KB_API_KEY=your-api-key \
            src-to-kb ./my-repo
 ```
 
@@ -165,11 +181,10 @@ docker run -e USE_EXTERNAL_KB=true \
 
 ### Document Processing Payload
 
-When external server is enabled, documents are sent with this payload format:
+When `EXTERNAL_KB_URL` is set, documents are sent with this payload format:
 
 ```json
 {
-  "company_uuid": 1,
   "title": "src/components/Button.js",
   "type": "document",
   "content": "// File content here...",
@@ -189,10 +204,11 @@ When external server is enabled, documents are sent with this payload format:
     "generateEmbeddings": false,
     "documentId": "doc_123",
     "processedAt": "2024-01-01T00:00:00.000Z"
-  },
-  "created_by_uuid": 1
+  }
 }
 ```
+
+**Note**: Company and user information are automatically detected from the `x-api-key` header when `EXTERNAL_KB_API_KEY` is provided. No need to include `company_uuid` or `created_by_uuid` in the payload.
 
 ### Search Payload
 
@@ -200,28 +216,34 @@ When searching, the external server receives this payload format:
 
 ```json
 {
-  "query": "tell me about required fields for createUserMessage function?",
-  "company_uuid": 1
+  "query": "tell me about required fields for createUserMessage function?"
 }
 ```
+
+**Note**: Company information is automatically detected from the `x-api-key` header when `EXTERNAL_KB_API_KEY` is provided. No need to include `company_uuid` in the payload.
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **"External server not enabled"**
-   - Set `USE_EXTERNAL_KB=true`
+1. **"External server not enabled" or using local mode when expecting external**
+   - Make sure `EXTERNAL_KB_URL` is set and not empty
+   - Check that the URL is a valid format (starts with http:// or https://)
+   - Example: `export EXTERNAL_KB_URL=https://your-api.com/kb/process`
 
-2. **"EXTERNAL_KB_URL is required"**
-   - Set `EXTERNAL_KB_URL=https://your-api.com/kb/process`
+2. **"Authentication failed" or "401 Unauthorized"**
+   - If your server requires authentication, set `EXTERNAL_KB_API_KEY`
+   - The API key is sent in the `x-api-key` header
+   - Example: `export EXTERNAL_KB_API_KEY=your-secret-key`
 
 3. **"Request timeout"**
-   - Increase `EXTERNAL_KB_TIMEOUT` value
-   - Check network connectivity
+   - Increase `EXTERNAL_KB_TIMEOUT` value (default is 30000ms / 30 seconds)
+   - Check network connectivity to the external server
+   - Verify the server URL is correct and accessible
 
 4. **"File too large"**
-   - Increase `EXTERNAL_KB_MAX_FILE_SIZE` value
-   - Or implement file splitting (future feature)
+   - Increase `EXTERNAL_KB_MAX_FILE_SIZE` value (default is 2MB)
+   - Or split large files manually before processing
 
 ### Debug Mode
 
@@ -229,9 +251,16 @@ Set `DEBUG=true` to see detailed request/response information:
 
 ```bash
 export DEBUG=true
-export USE_EXTERNAL_KB=true
 export EXTERNAL_KB_URL=https://api.example.com/kb/process
+export EXTERNAL_KB_API_KEY=your-api-key  # Optional, if required
 
 src-to-kb ./my-repo
 ```
+
+### API Key Header
+
+When `EXTERNAL_KB_API_KEY` is provided, it is automatically included in the `x-api-key` header for all requests:
+- Document processing requests (POST to `EXTERNAL_KB_URL`)
+- Search requests (POST to search endpoint)
+- Statistics requests (GET to stats endpoint)
 

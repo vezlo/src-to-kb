@@ -4,7 +4,7 @@ const swaggerSpec = {
   openapi: '3.0.0',
   info: {
     title: 'Source-to-KB API',
-    version: '1.3.0',
+    version: '1.3.4',
     description: 'REST API for converting source code repositories into searchable knowledge bases',
     contact: {
       name: 'API Support',

@@ -26,12 +26,12 @@ function generateSearchUrl(baseUrl) {
   return baseUrl.endsWith('/') ? baseUrl + 'search' : baseUrl + '/search';
 }
 
-const baseUrl = process.env.EXTERNAL_KB_URL || 'https://api.example.com/kb/process';
+const baseUrl = process.env.EXTERNAL_KB_URL;
 
 const EXTERNAL_SERVER_CONFIG = {
   // Server endpoints
   url: baseUrl,
-  searchUrl: generateSearchUrl(baseUrl),
+  searchUrl: baseUrl ? generateSearchUrl(baseUrl) : null,
   
   // Request configuration
   timeout: parseInt(process.env.EXTERNAL_KB_TIMEOUT) || 30000, // 30 seconds
@@ -39,15 +39,13 @@ const EXTERNAL_SERVER_CONFIG = {
   
   // Payload configuration
   payload: {
-    company_uuid: parseInt(process.env.EXTERNAL_KB_COMPANY_UUID) || 1,
-    created_by_uuid: parseInt(process.env.EXTERNAL_KB_CREATED_BY_UUID) || 1,
     type: process.env.EXTERNAL_KB_DOCUMENT_TYPE || 'document'
   },
   
   // Headers configuration
   headers: {
     'Content-Type': 'application/json',
-    'User-Agent': 'src-to-kb/1.3.1'
+    'User-Agent': 'src-to-kb/1.3.4'
   },
   
   // Retry configuration
@@ -60,7 +58,6 @@ const EXTERNAL_SERVER_CONFIG = {
 // Helper function to build payload
 function buildPayload(document, options = {}) {
   return {
-    company_uuid: EXTERNAL_SERVER_CONFIG.payload.company_uuid,
     title: document.fileName || document.relativePath,
     type: EXTERNAL_SERVER_CONFIG.payload.type,
     content: document.content,
@@ -87,21 +84,28 @@ function buildPayload(document, options = {}) {
       // Additional metadata
       documentId: document.id,
       processedAt: new Date().toISOString()
-    },
-    created_by_uuid: EXTERNAL_SERVER_CONFIG.payload.created_by_uuid
+    }
   };
+}
+
+// Helper function to check if external server is enabled (URL is set)
+function isExternalServerEnabled() {
+  return !!process.env.EXTERNAL_KB_URL && process.env.EXTERNAL_KB_URL.trim() !== '';
 }
 
 // Helper function to validate configuration
 function validateConfig() {
   const errors = [];
   
-  if (!EXTERNAL_SERVER_CONFIG.url) {
-    errors.push('EXTERNAL_KB_URL is required');
-  }
-  
-  if (EXTERNAL_SERVER_CONFIG.maxFileSize <= 0) {
-    errors.push('EXTERNAL_KB_MAX_FILE_SIZE must be greater than 0');
+  // Only validate if external server is enabled (URL is set)
+  if (isExternalServerEnabled()) {
+    if (!EXTERNAL_SERVER_CONFIG.url || EXTERNAL_SERVER_CONFIG.url.trim() === '') {
+      errors.push('EXTERNAL_KB_URL must be a valid URL when provided');
+    }
+    
+    if (EXTERNAL_SERVER_CONFIG.maxFileSize <= 0) {
+      errors.push('EXTERNAL_KB_MAX_FILE_SIZE must be greater than 0');
+    }
   }
   
   return errors;
@@ -110,6 +114,7 @@ function validateConfig() {
 module.exports = {
   EXTERNAL_SERVER_CONFIG,
   buildPayload,
-  validateConfig
+  validateConfig,
+  isExternalServerEnabled
 };
 
