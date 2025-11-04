@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { AnswerModeManager } = require('./modes');
 const { ExternalServerService } = require('./external-server-service');
+const { isExternalServerEnabled } = require('./external-server-config');
 
 class KnowledgeBaseSearch {
   constructor(kbPath = './knowledge-base', mode = 'developer') {
@@ -12,12 +13,15 @@ class KnowledgeBaseSearch {
     this.chunks = new Map();
     this.modeManager = new AnswerModeManager(mode);
     
-    // 🆕 NEW: Check if external server is enabled
-    this.useExternalServer = process.env.USE_EXTERNAL_KB === 'true';
+    // 🆕 NEW: Check if external server URL is provided (replaces USE_EXTERNAL_KB flag)
+    this.useExternalServer = isExternalServerEnabled();
     
     if (this.useExternalServer) {
       this.externalServer = new ExternalServerService();
       console.log('🌐 External server search enabled');
+      if (process.env.EXTERNAL_KB_API_KEY) {
+        console.log(`   API Key configured`);
+      }
     } else {
       this.loadKnowledgeBase();
     }

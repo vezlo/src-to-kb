@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { EventEmitter } = require('events');
 const { ExternalServerService } = require('./external-server-service');
+const { isExternalServerEnabled } = require('./external-server-config');
 
 class KnowledgeBaseGenerator extends EventEmitter {
   constructor(config = {}) {
@@ -37,16 +38,19 @@ class KnowledgeBaseGenerator extends EventEmitter {
       errors: []
     };
 
-    // 🆕 NEW: Global external server enable flag
-    this.useExternalServer = process.env.USE_EXTERNAL_KB === 'true';
+    // 🆕 NEW: Check if external server URL is provided (replaces USE_EXTERNAL_KB flag)
+    this.useExternalServer = isExternalServerEnabled();
     
-    // Initialize external server service only if enabled
+    // Initialize external server service only if URL is provided
     if (this.useExternalServer) {
       this.externalServer = new ExternalServerService();
       const extConfig = this.externalServer.getConfig();
       console.log('🌐 External server enabled');
       console.log(`   URL: ${extConfig.url}`);
       console.log(`   Max file size: ${(extConfig.maxFileSize / 1024 / 1024).toFixed(1)}MB`);
+      if (process.env.EXTERNAL_KB_API_KEY) {
+        console.log(`   API Key: ${'*'.repeat(process.env.EXTERNAL_KB_API_KEY.length - 4)}${process.env.EXTERNAL_KB_API_KEY.slice(-4)}`);
+      }
     } else {
       console.log('📁 Local processing mode');
     }

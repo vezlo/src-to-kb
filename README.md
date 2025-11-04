@@ -61,10 +61,16 @@ Experience external server integration immediately with our production-ready ass
 
 ```bash
 # Generate knowledge base using assistant-server
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items src-to-kb ./your-repo
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items src-to-kb ./your-repo
+
+# With API key authentication
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items EXTERNAL_KB_API_KEY=your-api-key src-to-kb ./your-repo
 
 # Search using assistant-server
-USE_EXTERNAL_KB=true EXTERNAL_KB_URL=https://your-assistant-server.com/api/search src-to-kb-search search "how does authentication work?"
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/search src-to-kb-search search "how does authentication work?"
+
+# Search with API key
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/search EXTERNAL_KB_API_KEY=your-api-key src-to-kb-search search "how does authentication work?"
 ```
 
 **Assistant Server**: [vezlo/assistant-server](https://github.com/vezlo/assistant-server) - Production-ready Node.js/TypeScript API server with vector search and Docker deployment

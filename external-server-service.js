@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { EXTERNAL_SERVER_CONFIG, buildPayload, validateConfig } = require('./external-server-config');
+const { EXTERNAL_SERVER_CONFIG, buildPayload, validateConfig, isExternalServerEnabled } = require('./external-server-config');
 
 class ExternalServerService {
   constructor(config = {}) {
@@ -62,12 +62,16 @@ class ExternalServerService {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
     
+    // Build headers with API key if provided
+    const headers = { ...this.config.headers };
+    if (process.env.EXTERNAL_KB_API_KEY) {
+      headers['x-api-key'] = process.env.EXTERNAL_KB_API_KEY;
+    }
+    
     try {
       const response = await fetch(this.config.url, {
         method: 'POST',
-        headers: {
-          ...this.config.headers
-        },
+        headers: headers,
         body: JSON.stringify(payload),
         signal: controller.signal
       });
@@ -119,19 +123,22 @@ class ExternalServerService {
 
   async search(query, options = {}) {
     const searchPayload = {
-      query: query,
-      company_uuid: this.config.payload.company_uuid
+      query: query
     };
 
     console.log(`🔍 Searching external server: "${query}"`);
     console.log(`   URL: ${this.config.searchUrl}`);
     console.log(`   Payload:`, JSON.stringify(searchPayload, null, 2));
 
+    // Build headers with API key if provided
+    const headers = { ...this.config.headers };
+    if (process.env.EXTERNAL_KB_API_KEY) {
+      headers['x-api-key'] = process.env.EXTERNAL_KB_API_KEY;
+    }
+
     const response = await fetch(this.config.searchUrl, {
       method: 'POST',
-      headers: {
-        ...this.config.headers
-      },
+      headers: headers,
       body: JSON.stringify(searchPayload),
       signal: AbortSignal.timeout(this.config.timeout)
     });
@@ -147,11 +154,15 @@ class ExternalServerService {
   async getStatistics() {
     const statsUrl = this.config.url.replace('/process', '/stats');
     
+    // Build headers with API key if provided
+    const headers = { ...this.config.headers };
+    if (process.env.EXTERNAL_KB_API_KEY) {
+      headers['x-api-key'] = process.env.EXTERNAL_KB_API_KEY;
+    }
+    
     const response = await fetch(statsUrl, {
       method: 'GET',
-      headers: {
-        ...this.config.headers
-      },
+      headers: headers,
       signal: AbortSignal.timeout(this.config.timeout)
     });
 

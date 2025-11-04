@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.3.4] - 2025-11-04
+
+### Changed
+- 🔧 **External Server Configuration**: Removed `USE_EXTERNAL_KB` flag - external server mode is now automatically enabled when `EXTERNAL_KB_URL` is set
+- 🔐 **API Key Authentication**: Added `EXTERNAL_KB_API_KEY` environment variable support - API key is automatically sent in `x-api-key` header when provided
+- 📝 **Simplified Configuration**: External server mode now requires only `EXTERNAL_KB_URL` - no separate enable flag needed
+- 🔄 **Automatic Fallback**: If `EXTERNAL_KB_URL` is not set, tool automatically falls back to local processing mode
+- 🗑️ **Removed UUID Fields**: Removed `company_uuid` and `created_by_uuid` from document processing payload - company/user information is now automatically detected from API key
+- 🗑️ **Removed UUID from Search**: Removed `company_uuid` from search payload - company information is now automatically detected from API key
+
+### Breaking Changes
+- ❌ **Removed**: `USE_EXTERNAL_KB` environment variable is no longer used
+- ❌ **Removed**: `EXTERNAL_KB_COMPANY_UUID` environment variable is no longer used
+- ❌ **Removed**: `EXTERNAL_KB_CREATED_BY_UUID` environment variable is no longer used
+- ✅ **Migration**: Simply set `EXTERNAL_KB_URL` instead of both `USE_EXTERNAL_KB=true` and `EXTERNAL_KB_URL`
+- ✅ **Payload Changes**: Document processing payload no longer includes `company_uuid` or `created_by_uuid` fields
+- ✅ **Search Payload Changes**: Search payload no longer includes `company_uuid` field
+
+### Added
+- 🔑 **API Key Support**: New `EXTERNAL_KB_API_KEY` environment variable for authenticating with external servers
+- 📚 **Updated Documentation**: Revised README.md and EXTERNAL_SERVER_ENV.md to reflect new configuration approach
+
 ## [1.3.3] - 2025-09-30
 
 ### Added
