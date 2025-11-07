@@ -58,7 +58,7 @@ const EXTERNAL_SERVER_CONFIG = {
 // Helper function to build payload
 function buildPayload(document, options = {}) {
   return {
-    title: document.fileName || document.relativePath,
+    title: document.title || document.fileName || document.relativePath,
     type: EXTERNAL_SERVER_CONFIG.payload.type,
     content: document.content,
     metadata: {
@@ -70,11 +70,18 @@ function buildPayload(document, options = {}) {
       checksum: document.checksum,
       
       // Processing metadata
-      language: document.metadata.language,
-      type: document.metadata.type,
-      lines: document.metadata.lines,
-      createdAt: document.metadata.createdAt,
-      modifiedAt: document.metadata.modifiedAt,
+      language: document.metadata?.language,
+      type: document.metadata?.type,
+      lines: document.metadata?.lines,
+      createdAt: document.metadata?.createdAt,
+      modifiedAt: document.metadata?.modifiedAt,
+      
+      // Notion-specific metadata (if present)
+      source: document.metadata?.source,
+      notionPageId: document.metadata?.notionPageId,
+      notionUrl: document.metadata?.notionUrl,
+      lastEditedTime: document.metadata?.lastEditedTime,
+      createdTime: document.metadata?.createdTime,
       
       // Processing options
       chunkSize: options.chunkSize || 1000,

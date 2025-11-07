@@ -531,8 +531,10 @@ if (require.main === module) {
 
 Usage:
   src-to-kb <repository-path> [options]
+  src-to-kb --source=notion [notion-options] [options]
 
 Options:
+  --source            Source type: code (default) or notion
   --output, -o        Output directory (default: ./knowledge-base)
   --chunk-size        Chunk size in characters (default: 1000)
   --chunk-overlap     Overlap between chunks (default: 200)
@@ -544,40 +546,66 @@ Options:
   --help, -h          Show this help message
   --version, -v       Show version number
 
+Notion Options:
+  --notion-key        Notion API integration token (or set NOTION_API_KEY env var)
+  --notion-url        Notion page or database URL (auto-detects type)
+
 Examples:
   src-to-kb /path/to/repo
   src-to-kb /path/to/repo --output ./my-kb --embeddings
   src-to-kb . --exclude tests,examples --extensions .js,.ts
+  
+  src-to-kb --source=notion --notion-key=secret_xxx --notion-url=https://notion.so/My-Page-abc123
+  src-to-kb --source=notion --notion-url=https://notion.so/Database-xyz789
 
-Note: Repository path must be provided as the first non-flag argument
+Note: For code analysis, repository path must be provided as the first non-flag argument
     `);
     process.exit(0);
   }
 
-  // Find the repository path (first non-flag argument)
+  // Check if using Notion source
+  const sourceIndex = args.findIndex(arg => arg.startsWith('--source'));
+  const isNotionSource = sourceIndex !== -1 && args[sourceIndex].includes('notion');
+
+  // Find the repository path (first non-flag argument) - only for code source
   let repoPath = null;
-  for (const arg of args) {
-    if (!arg.startsWith('--') && !arg.startsWith('-')) {
-      repoPath = arg;
-      break;
+  if (!isNotionSource) {
+    for (const arg of args) {
+      if (!arg.startsWith('--') && !arg.startsWith('-')) {
+        repoPath = arg;
+        break;
+      }
+    }
+
+    if (!repoPath) {
+      console.error('❌ Error: Repository path is required for code analysis');
+      console.log('Usage: src-to-kb <repository-path> [options]');
+      console.log('Or use: src-to-kb --source=notion [notion-options]');
+      console.log('Run "src-to-kb --help" for more information');
+      process.exit(1);
     }
   }
-
-  if (!repoPath) {
-    console.error('❌ Error: Repository path is required');
-    console.log('Usage: src-to-kb <repository-path> [options]');
-    console.log('Run "src-to-kb --help" for more information');
-    process.exit(1);
-  }
   const options = {};
+  const notionOptions = {};
 
-  // Parse CLI arguments (skip the repo path)
+  // Parse CLI arguments
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    // Skip the repo path
-    if (arg === repoPath) continue;
+    // Skip the repo path if present
+    if (repoPath && arg === repoPath) {
+      continue;
+    }
 
+    // Skip --source flag (already processed)
+    if (arg.startsWith('--source=')) {
+      continue;
+    } else if (arg === '--source') {
+      i++; // Skip next arg value
+      continue;
+    }
+
+    // Parse options
     if (arg === '--output' || arg === '-o') {
       options.outputPath = args[++i];
     } else if (arg === '--chunk-size') {
@@ -595,24 +623,101 @@ Note: Repository path must be provided as the first non-flag argument
       options.excludePaths = [...(options.excludePaths || []), ...excludes];
     } else if (arg === '--extensions') {
       options.supportedExtensions = args[++i].split(',');
+    } else if (arg === '--notion-key' || arg.startsWith('--notion-key=')) {
+      notionOptions.apiKey = arg.startsWith('--notion-key=') ? arg.split('=')[1] : args[++i];
+    } else if (arg === '--notion-url' || arg.startsWith('--notion-url=')) {
+      notionOptions.pageUrl = arg.startsWith('--notion-url=') ? arg.split('=')[1] : args[++i];
     }
   }
 
-  // Run the generator
-  const generator = new KnowledgeBaseGenerator(options);
+  // Run the appropriate source processor
+  if (isNotionSource) {
+    // Process Notion pages
+    const { NotionSource } = require('./notion-source');
+    
+    (async () => {
+      try {
+        const notionSource = new NotionSource(notionOptions);
+        const documents = await notionSource.analyze();
+        
+        console.log(`\n📝 Processing ${documents.length} Notion documents into KB format...`);
+        
+        // Initialize generator for KB creation
+        const generator = new KnowledgeBaseGenerator({
+          ...options,
+          outputPath: options.outputPath || './knowledge-base/notion'
+        });
+        
+        // Process each Notion document through the chunking system
+        for (const doc of documents) {
+          console.log(`\n📄 Processing: ${doc.title}`);
+          
+          // Check if external server is enabled
+          if (generator.useExternalServer) {
+            // Send to external server (server will handle chunking and storage)
+            try {
+              await generator.processWithExternalServer(doc);
+              generator.stats.filesProcessed++;
+              generator.stats.totalSize += doc.size;
+            } catch (error) {
+              console.warn(`   ⚠️  External server failed, saving locally: ${error.message}`);
+              // Fallback to local processing
+              const chunks = generator.createChunks(doc.content, doc.id, doc.metadata);
+              doc.chunks = chunks;
+              await generator.saveDocument(doc);
+              generator.stats.filesProcessed++;
+              generator.stats.totalSize += doc.size;
+              generator.stats.totalChunks += chunks.length;
+              console.log(`   ✅ Created ${chunks.length} chunks locally`);
+            }
+          } else {
+            // Local processing: create chunks and save
+            const chunks = generator.createChunks(doc.content, doc.id, doc.metadata);
+            doc.chunks = chunks;
+            await generator.saveDocument(doc);
+            generator.stats.filesProcessed++;
+            generator.stats.totalSize += doc.size;
+            generator.stats.totalChunks += chunks.length;
+            console.log(`   ✅ Created ${chunks.length} chunks`);
+          }
+        }
+        
+        // Save metadata
+        generator.saveMetadata();
+        
+        console.log('\n✨ Notion knowledge base generation complete!');
+        console.log(`📊 Processed ${documents.length} pages, ${generator.stats.totalChunks} chunks`);
+        
+        // Only show "Saved to" if not using external server
+        if (!generator.useExternalServer) {
+          console.log(`💾 Saved to: ${generator.config.outputPath}`);
+        }
+        
+        process.exit(0);
+        
+      } catch (error) {
+        console.error('\n❌ Error:', error.message);
+        process.exit(1);
+      }
+    })();
+    
+  } else {
+    // Process code repository (existing logic)
+    const generator = new KnowledgeBaseGenerator(options);
 
-  generator.on('fileProcessed', (data) => {
-    // Progress indicator
-    process.stdout.write('.');
-  });
-
-  generator.processRepository(repoPath)
-    .then(() => {
-      console.log('\n✨ Knowledge base generation complete!');
-      process.exit(0);
-    })
-    .catch(error => {
-      console.error('\n❌ Error:', error.message);
-      process.exit(1);
+    generator.on('fileProcessed', (data) => {
+      // Progress indicator
+      process.stdout.write('.');
     });
+
+    generator.processRepository(repoPath)
+      .then(() => {
+        console.log('\n✨ Knowledge base generation complete!');
+        process.exit(0);
+      })
+      .catch(error => {
+        console.error('\n❌ Error:', error.message);
+        process.exit(1);
+      });
+  }
 }

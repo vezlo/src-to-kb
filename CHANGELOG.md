@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.4.0] - 2025-01-06
+
+### Added
+- **Notion Integration**: Import Notion pages and databases directly into knowledge base
+- **CLI Options**: `--source=notion`, `--notion-url`, `--notion-key` for Notion integration
+- **Auto-detection**: Automatically detects page vs database from URL
+- **External Server Support**: Send Notion content to assistant-server
+- **Documentation**: Complete guide in [docs/NOTION_INTEGRATION.md](https://github.com/vezlo/src-to-kb/blob/main/docs/NOTION_INTEGRATION.md)
+
+### Changed
+- **Documentation**: Moved detailed guides to `docs/` folder with absolute GitHub URLs
+- **Notion API**: Updated to API v5 (2025-09-03) with data sources support
+
+### Dependencies
+- Added `@notionhq/client@^5.3.0`
+
 ## [1.3.4] - 2025-11-04
 
 ### Changed

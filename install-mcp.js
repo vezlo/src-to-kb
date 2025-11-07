@@ -153,8 +153,8 @@ async function installMCPServer() {
     console.log('   - "What languages does this project use?"\n');
 
     console.log('📚 Documentation:');
-    console.log('   - MCP Tools Guide: https://github.com/vezlo/src-to-kb/blob/main/MCP_TOOLS_GUIDE.md');
-    console.log('   - Troubleshooting: https://github.com/vezlo/src-to-kb/blob/main/MCP_SETUP.md\n');
+    console.log('   - MCP Tools Guide: https://github.com/vezlo/src-to-kb/blob/main/docs/MCP_TOOLS_GUIDE.md');
+    console.log('   - Troubleshooting: https://github.com/vezlo/src-to-kb/blob/main/docs/MCP_SETUP.md\n');
 
     if (!apiKey) {
       console.log('💡 Tip: To enable embeddings later, run:');

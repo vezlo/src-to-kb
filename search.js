@@ -499,6 +499,8 @@ Examples:
   const command = args[0];
   const kbPath = args.includes('--kb')
     ? args[args.indexOf('--kb') + 1]
+    : args.includes('--kb-path')
+    ? args[args.indexOf('--kb-path') + 1]
     : './knowledge-base';
 
   const mode = args.includes('--mode')
