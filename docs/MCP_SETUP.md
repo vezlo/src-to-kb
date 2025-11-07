@@ -2,7 +2,7 @@
 
 This guide explains how to set up the src-to-kb MCP server with Claude Code, Cursor, and other MCP-compatible tools.
 
-📚 **For detailed information about available MCP tools and their usage, see [MCP_TOOLS_GUIDE.md](MCP_TOOLS_GUIDE.md)**
+📚 **For detailed information about available MCP tools and their usage, see [MCP_TOOLS_GUIDE.md](./MCP_TOOLS_GUIDE.md)**
 
 ## Prerequisites
 

@@ -37,7 +37,7 @@ Examples:
 API Documentation:
   Once started, visit http://localhost:3000/api/v1/docs for Swagger UI
 
-For more information, see API_DOCUMENTATION.md
+For more information, see https://github.com/vezlo/src-to-kb/blob/main/docs/API_DOCUMENTATION.md
   `);
   process.exit(0);
 }

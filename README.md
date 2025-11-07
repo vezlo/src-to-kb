@@ -20,6 +20,7 @@ After installation, you'll have access to these commands:
 ## Features
 
 - 📁 **Multi-language Support**: JavaScript, TypeScript, Python, Java, C++, Go, Rust, and more
+- 📝 **Notion Integration**: Import pages and databases directly from Notion (NEW!)
 - 🎯 **Answer Modes**: Three modes for different users - End User (simple), Developer (technical), Copilot (code-focused)
 - 🌐 **REST API**: Full-featured API with Swagger documentation for integration with external services
 - 🔍 **Smart Chunking**: Intelligent code splitting with configurable overlap
@@ -79,7 +80,80 @@ EXTERNAL_KB_URL=https://your-assistant-server.com/api/search EXTERNAL_KB_API_KEY
 
 For production deployments or custom servers:
 
-📖 **Complete Guide**: [External Server Setup Guide](https://github.com/vezlo/src-to-kb/blob/main/EXTERNAL_SERVER_ENV.md)
+📖 **Complete Guide**: [External Server Setup Guide](https://github.com/vezlo/src-to-kb/blob/main/docs/EXTERNAL_SERVER_ENV.md)
+
+## Notion Integration 📝
+
+**NEW!** Import your Notion pages and databases directly into your knowledge base! Perfect for combining documentation, project plans, and code knowledge in one searchable system.
+
+### Quick Start with Notion
+
+```bash
+# 1. Get your Notion API key (see full guide below)
+export NOTION_API_KEY=secret_xxx
+
+# 2. Generate KB from a Notion page
+src-to-kb --source=notion --notion-url=https://notion.so/Your-Page-abc123
+
+# 3. Or fetch all pages from a Notion database
+src-to-kb --source=notion --notion-url=https://notion.so/Database-xyz789
+
+# 4. Search your Notion content
+src-to-kb-search search "your query" --kb ./knowledge-base/notion
+```
+
+### With External Server
+
+Send Notion content directly to your assistant-server:
+
+```bash
+# Set external server URL
+export EXTERNAL_KB_URL=http://localhost:3002/api/knowledge/items
+export EXTERNAL_KB_API_KEY=your-api-key
+
+# Fetch from Notion and send to server
+src-to-kb --source=notion --notion-url=https://notion.so/Your-Page-abc123
+
+# Search via external server
+export EXTERNAL_KB_URL=http://localhost:3002/api/knowledge/search
+src-to-kb-search search "your query"
+```
+
+### Features
+
+- ✅ **Auto-detection**: Automatically detects if URL is a page or database
+- ✅ **Single Page**: Fetch individual Notion pages
+- ✅ **Database Support**: Fetch all pages from a Notion database
+- ✅ **Rich Content**: Preserves formatting, headings, lists, code blocks, and more
+- ✅ **Separate KB**: Notion content saved to `./knowledge-base/notion` by default
+- ✅ **External Server**: Send directly to assistant-server for production use
+
+### Examples
+
+```bash
+# Single page (local KB)
+src-to-kb --source=notion --notion-url=https://notion.so/Project-Docs-abc123
+
+# Database with all pages (local KB)
+src-to-kb --source=notion --notion-url=https://notion.so/Team-Wiki-xyz789
+
+# With API key as parameter
+src-to-kb --source=notion --notion-key=secret_xxx --notion-url=https://notion.so/Page-abc123
+
+# Send to external server
+EXTERNAL_KB_URL=http://localhost:3002/api/knowledge/items \
+EXTERNAL_KB_API_KEY=your-key \
+src-to-kb --source=notion --notion-url=https://notion.so/Page-abc123
+
+# Search local Notion KB
+src-to-kb-search search "project timeline" --kb ./knowledge-base/notion
+
+# Search via external server
+EXTERNAL_KB_URL=http://localhost:3002/api/knowledge/search \
+src-to-kb-search search "project timeline"
+```
+
+📖 **Complete Notion Guide**: [Notion Integration Documentation](https://github.com/vezlo/src-to-kb/blob/main/docs/NOTION_INTEGRATION.md) - Includes setup instructions, API key creation, sharing pages/databases, and troubleshooting
 
 ### 1. Basic Usage
 
@@ -216,6 +290,7 @@ node kb-generator.js /path/to/repo
 
 ```
 Usage: node kb-generator.js <repository-path> [options]
+       node kb-generator.js --source=notion [notion-options] [options]
 
 Options:
   --output, -o        Output directory (default: ./knowledge-base)
@@ -226,6 +301,11 @@ Options:
   --no-comments       Exclude comments from code
   --exclude           Additional paths to exclude (comma-separated)
   --extensions        File extensions to include (comma-separated)
+
+Notion Options (use with --source=notion):
+  --source            Source type: code (default) or notion
+  --notion-key        Notion API integration token (or set NOTION_API_KEY env var)
+  --notion-url        Notion page or database URL (auto-detects type)
 ```
 
 ## Complete Example Workflow
@@ -365,7 +445,7 @@ const searchResponse = await fetch('http://localhost:3000/api/v1/search', {
 });
 ```
 
-For complete API documentation, see [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+For complete API documentation, see [API_DOCUMENTATION.md](https://github.com/vezlo/src-to-kb/blob/main/docs/API_DOCUMENTATION.md)
 
 ## MCP Server for Claude Code
 
@@ -421,7 +501,7 @@ claude mcp get src-to-kb
    - "What languages does this codebase use?"
    - "Find files similar to config.js"
 
-See [MCP_SETUP.md](MCP_SETUP.md) for manual setup and [MCP_TOOLS_GUIDE.md](MCP_TOOLS_GUIDE.md) for detailed tool documentation.
+See [MCP_SETUP.md](https://github.com/vezlo/src-to-kb/blob/main/docs/MCP_SETUP.md) for manual setup and [MCP_TOOLS_GUIDE.md](https://github.com/vezlo/src-to-kb/blob/main/docs/MCP_TOOLS_GUIDE.md) for detailed tool documentation.
 
 ## Searching the Knowledge Base
 

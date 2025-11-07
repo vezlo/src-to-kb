@@ -38,9 +38,7 @@ class ExternalServerService {
       try {
         const response = await this.makeRequest(payload);
         
-        console.log(`✅ External server processed: ${document.relativePath}`);
-        console.log(`   Response: ${response.status} ${response.statusText}`);
-        console.log(`   ────────────────────────────────────────────────`);
+        console.log(`   ✅ Sent successfully (${response.status} ${response.statusText})`);
         
         return await response.json();
         
