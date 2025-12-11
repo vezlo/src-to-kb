@@ -16,16 +16,21 @@ EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items src-to-kb 
 EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items EXTERNAL_KB_API_KEY=your-api-key src-to-kb ./your-repo
 
 # Search using npm package
-EXTERNAL_KB_URL=https://your-assistant-server.com/api/search src-to-kb-search search "authentication implementation"
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items \
+EXTERNAL_KB_SEARCH_URL=https://your-assistant-server.com/api/search \
+src-to-kb-search search "authentication implementation"
 
 # Search with API key
-EXTERNAL_KB_URL=https://your-assistant-server.com/api/search EXTERNAL_KB_API_KEY=your-api-key src-to-kb-search search "authentication implementation"
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items \
+EXTERNAL_KB_SEARCH_URL=https://your-assistant-server.com/api/search \
+EXTERNAL_KB_API_KEY=your-api-key \
+src-to-kb-search search "authentication implementation"
 
 # Using npx (no installation)
 EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items npx @vezlo/src-to-kb ./your-repo
 
 # Local development (if cloned from GitHub)
-EXTERNAL_KB_URL=https://your-assistant-server.com/api/search node kb-generator.js ./your-repo
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items node kb-generator.js ./your-repo
 ```
 
 ## Usage Examples
@@ -44,10 +49,15 @@ EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items src-to-kb ./my-repo
 EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items EXTERNAL_KB_API_KEY=your-api-key src-to-kb ./my-repo
 
 # Search with external server
-EXTERNAL_KB_URL=http://localhost:3000/api/search src-to-kb-search search "authentication"
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items \
+EXTERNAL_KB_SEARCH_URL=http://localhost:3000/api/search \
+src-to-kb-search search "authentication"
 
 # Search with API key
-EXTERNAL_KB_URL=http://localhost:3000/api/search EXTERNAL_KB_API_KEY=your-api-key src-to-kb-search search "authentication"
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items \
+EXTERNAL_KB_SEARCH_URL=http://localhost:3000/api/search \
+EXTERNAL_KB_API_KEY=your-api-key \
+src-to-kb-search search "authentication"
 ```
 
 #### Option 2: NPX (No Installation)
@@ -59,7 +69,9 @@ EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items npx @vezlo/src-to-kb .
 EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items EXTERNAL_KB_API_KEY=your-api-key npx @vezlo/src-to-kb ./my-repo
 
 # Search with external server
-EXTERNAL_KB_URL=http://localhost:3000/api/search npx @vezlo/src-to-kb-search search "authentication"
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items \
+EXTERNAL_KB_SEARCH_URL=http://localhost:3000/api/search \
+npx @vezlo/src-to-kb-search search "authentication"
 ```
 
 #### Option 3: Local Development
@@ -76,7 +88,18 @@ EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items node kb-generator.js .
 EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items EXTERNAL_KB_API_KEY=your-api-key node kb-generator.js ./my-repo
 
 # Search with external server
-EXTERNAL_KB_URL=http://localhost:3000/api/search node search.js search "authentication"
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items \
+EXTERNAL_KB_SEARCH_URL=http://localhost:3000/api/search \
+node search.js search "authentication"
+
+# Upload existing local KB to external server
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items src-to-kb-upload --kb ./knowledge-base
+
+# Upload chunks only
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items src-to-kb-upload --kb ./knowledge-base --chunks-only
+
+# Upload chunks with embeddings
+EXTERNAL_KB_URL=http://localhost:3000/api/knowledge/items src-to-kb-upload --kb ./knowledge-base --with-embeddings
 ```
 
 ## Environment Variables
@@ -92,8 +115,15 @@ External server mode is **automatically enabled** when `EXTERNAL_KB_URL` is set.
 ### `EXTERNAL_KB_URL`
 - **Type**: String
 - **Default**: `undefined` (local mode)
-- **Description**: External server endpoint for processing documents. When set, automatically enables external server mode for both document processing and search
-- **Example**: `EXTERNAL_KB_URL=https://your-api.com/kb/process`
+- **Description**: External server endpoint for processing documents. When set, automatically enables external server mode
+- **Example**: `EXTERNAL_KB_URL=https://your-api.com/api/knowledge/items`
+
+### `EXTERNAL_KB_SEARCH_URL`
+- **Type**: String
+- **Default**: `undefined`
+- **Description**: External server endpoint for search operations. **Required** when using external server for search commands
+- **Example**: `EXTERNAL_KB_SEARCH_URL=https://your-api.com/api/search`
+- **Note**: Must be set when using `src-to-kb-search` with external server enabled
 
 ## Optional Variables
 
@@ -103,11 +133,6 @@ External server mode is **automatically enabled** when `EXTERNAL_KB_URL` is set.
 - **Description**: API key for authenticating with the external server. When provided, this key is sent in the `x-api-key` header with all requests
 - **Example**: `EXTERNAL_KB_API_KEY=your-secret-api-key-here`
 
-### `EXTERNAL_KB_SEARCH_URL`
-- **Type**: String
-- **Default**: Auto-generated from `EXTERNAL_KB_URL`
-- **Description**: External server endpoint for search
-- **Example**: `EXTERNAL_KB_SEARCH_URL=https://your-api.com/kb/search`
 
 ### `EXTERNAL_KB_MAX_FILE_SIZE`
 - **Type**: Number (bytes)
@@ -181,7 +206,9 @@ docker run -e EXTERNAL_KB_URL=https://api.example.com/kb/process \
 
 ### Document Processing Payload
 
-When `EXTERNAL_KB_URL` is set, documents are sent with this payload format:
+When `EXTERNAL_KB_URL` is set, documents can be sent in three formats:
+
+#### 1. Raw Content (Default)
 
 ```json
 {
@@ -197,18 +224,74 @@ When `EXTERNAL_KB_URL` is set, documents are sent with this payload format:
     "language": "JavaScript",
     "type": "code",
     "lines": 100,
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "modifiedAt": "2024-01-01T00:00:00.000Z",
     "chunkSize": 1000,
     "chunkOverlap": 200,
-    "generateEmbeddings": false,
     "documentId": "doc_123",
     "processedAt": "2024-01-01T00:00:00.000Z"
   }
 }
 ```
 
-**Note**: Company and user information are automatically detected from the `x-api-key` header when `EXTERNAL_KB_API_KEY` is provided. No need to include `company_uuid` or `created_by_uuid` in the payload.
+#### 2. Chunks Only (`--chunks-only` flag)
+
+```json
+{
+  "title": "src/components/Button.js",
+  "type": "document",
+  "chunks": [
+    {
+      "id": "doc_123_chunk_0",
+      "index": 0,
+      "content": "chunk content...",
+      "startLine": 0,
+      "endLine": 10,
+      "size": 100
+    }
+  ],
+  "hasEmbeddings": false,
+  "metadata": {
+    "relativePath": "src/components/Button.js",
+    "fileName": "Button.js",
+    "extension": ".js",
+    "chunkSize": 1000,
+    "chunkOverlap": 200,
+    "documentId": "doc_123",
+    "processedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+#### 3. Chunks with Embeddings (`--with-embeddings` flag)
+
+```json
+{
+  "title": "src/components/Button.js",
+  "type": "document",
+  "chunks": [
+    {
+      "id": "doc_123_chunk_0",
+      "index": 0,
+      "content": "chunk content...",
+      "embedding": [0.123, 0.456, ...],
+      "startLine": 0,
+      "endLine": 10,
+      "size": 100
+    }
+  ],
+  "hasEmbeddings": true,
+  "metadata": {
+    "relativePath": "src/components/Button.js",
+    "fileName": "Button.js",
+    "extension": ".js",
+    "chunkSize": 1000,
+    "chunkOverlap": 200,
+    "documentId": "doc_123",
+    "processedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+**Note**: Company and user information are automatically detected from the `x-api-key` header when `EXTERNAL_KB_API_KEY` is provided. Embeddings use `text-embedding-3-large` model (3072 dimensions).
 
 ### Search Payload
 

@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const { EventEmitter } = require('events');
 const { ExternalServerService } = require('./external-server-service');
 const { isExternalServerEnabled } = require('./external-server-config');
+const { validateOpenAIKey: validateOpenAIKeyUtil, validateExternalServer: validateExternalServerUtil } = require('./validation-utils');
 
 class KnowledgeBaseGenerator extends EventEmitter {
   constructor(config = {}) {
@@ -27,7 +28,8 @@ class KnowledgeBaseGenerator extends EventEmitter {
       ],
       includeComments: config.includeComments !== false,
       generateEmbeddings: config.generateEmbeddings || false,
-      openaiApiKey: config.openaiApiKey || process.env.OPENAI_API_KEY
+      openaiApiKey: config.openaiApiKey || process.env.OPENAI_API_KEY,
+      createChunks: config.createChunks || false
     };
 
     this.documents = new Map();
@@ -81,6 +83,16 @@ class KnowledgeBaseGenerator extends EventEmitter {
       throw new Error(`Repository path does not exist: ${repoPath}`);
     }
 
+    // Early validation: Check OpenAI key if embeddings are required
+    if (this.config.generateEmbeddings) {
+      await validateOpenAIKeyUtil(this.config.openaiApiKey);
+    }
+
+    // Early validation: Test external server connection and auth on first request
+    if (this.useExternalServer) {
+      await validateExternalServerUtil(this.externalServer);
+    }
+
     const files = this.scanDirectory(repoPath, options.maxDepth || 10);
     console.log(`📁 Found ${files.length} files to process\n`);
 
@@ -98,6 +110,20 @@ class KnowledgeBaseGenerator extends EventEmitter {
         }
         
       } catch (error) {
+        // In server mode, stop all processing on any error (no fallback)
+        if (this.useExternalServer) {
+          console.error(`\n❌ ${error.message}`);
+          if (error.message.includes('authentication failed') || error.message.includes('401') || error.message.includes('403')) {
+            console.error('   Stopping all processing due to authentication error.');
+            console.error('   Please check your EXTERNAL_KB_API_KEY and ensure it is valid.\n');
+          } else {
+            console.error('   Stopping all processing due to external server error.');
+            console.error('   External server mode does not fallback to local processing.\n');
+          }
+          throw error; // Re-throw to stop the loop
+        }
+        
+        // In local mode, continue with other files on error
         console.error(`❌ Error processing ${filePath}: ${error.message}`);
         this.stats.errors.push({ file: filePath, error: error.message });
       }
@@ -182,50 +208,116 @@ class KnowledgeBaseGenerator extends EventEmitter {
       chunks: []
     };
 
-    // 🆕 NEW: Choose processing method
+    // Choose processing method based on server mode and flags
     if (this.useExternalServer) {
-      await this.processWithExternalServer(document);
+      // Server mode: Send to server (no fallback)
+      if (this.config.createChunks || this.config.generateEmbeddings) {
+        // Create chunks locally first
+        await this.processLocally(document);
+        
+        // Then send to server
+        if (this.config.generateEmbeddings) {
+          // Send chunks with embeddings
+          await this.sendEmbeddingsToServer(document);
+        } else {
+          // Send chunks only
+          await this.sendChunksToServer(document);
+        }
+      } else {
+        // Default: Send raw content (server does chunking)
+        await this.processWithExternalServer(document);
+      }
     } else {
+      // Local mode: Process locally only
       await this.processLocally(document);
     }
 
     this.documents.set(document.id, document);
     this.stats.filesProcessed++;
     this.stats.totalSize += stats.size;
-    this.stats.totalChunks += document.chunks.length;
+    // Only count chunks if they exist (local-first creates chunks, direct send doesn't)
+    if (document.chunks && document.chunks.length > 0) {
+      this.stats.totalChunks += document.chunks.length;
+    }
 
     this.emit('fileProcessed', {
       file: relativePath,
       documentId: document.id,
-      chunks: document.chunks.length
+      chunks: document.chunks ? document.chunks.length : 0
     });
   }
 
-  // 🆕 NEW: External server processing
+  // External server processing (sends raw content)
   async processWithExternalServer(document) {
-    try {
-      const options = {
-        chunkSize: this.config.chunkSize,
-        chunkOverlap: this.config.chunkOverlap,
-        generateEmbeddings: this.config.generateEmbeddings
-      };
+    const options = {
+      chunkSize: this.config.chunkSize,
+      chunkOverlap: this.config.chunkOverlap,
+      generateEmbeddings: false, // Server will generate embeddings
+      sendEmbeddings: false // Sending raw content
+    };
 
-      const result = await this.externalServer.sendDocument(document, options);
-      
-      // Store external server response
-      document.externalId = result.id || result.documentId;
-      document.externalChunks = result.chunkIds || [];
-      document.externalResult = result;
-      
-      console.log(`✅ External server processed: ${document.relativePath}`);
-      
-    } catch (error) {
-      console.warn(`⚠️  External server failed for ${document.relativePath}: ${error.message}`);
-      console.log(`🔄 Falling back to local processing...`);
-      
-      // Fallback to local processing
-      await this.processLocally(document);
+    const result = await this.externalServer.sendDocument(document, options);
+    
+    // Store external server response
+    document.externalId = result.id || result.documentId;
+    document.externalChunks = result.chunkIds || [];
+    document.externalResult = result;
+    
+    console.log(`✅ External server processed: ${document.relativePath}`);
+  }
+
+  // Send chunks to server (requires local KB with chunks)
+  async sendChunksToServer(document) {
+    if (!document.chunks || document.chunks.length === 0) {
+      throw new Error('No chunks available. Chunks must be created first.');
     }
+
+    const options = {
+      chunkSize: this.config.chunkSize,
+      chunkOverlap: this.config.chunkOverlap,
+      generateEmbeddings: false,
+      sendEmbeddings: false,
+      sendChunks: true // Indicate we're sending chunks (not raw content)
+    };
+
+    // Send chunks array directly (buildPayload will handle it)
+    const result = await this.externalServer.sendDocument(document, options);
+    
+    // Store external server response
+    document.externalId = result.id || result.documentId;
+    document.externalChunks = result.chunkIds || [];
+    document.externalResult = result;
+    
+    console.log(`✅ Sent chunks to external server: ${document.relativePath}`);
+  }
+
+  // Send embeddings to server (requires local KB with embeddings)
+  async sendEmbeddingsToServer(document) {
+    if (!document.chunks || document.chunks.length === 0) {
+      throw new Error('No chunks available. Chunks must be created first.');
+    }
+
+    // Check if embeddings exist
+    const hasEmbeddings = document.chunks.some(chunk => chunk.embedding);
+    if (!hasEmbeddings) {
+      throw new Error('No embeddings found. Generate embeddings first with --with-embeddings flag.');
+    }
+
+    const options = {
+      chunkSize: this.config.chunkSize,
+      chunkOverlap: this.config.chunkOverlap,
+      generateEmbeddings: false, // Already generated
+      sendEmbeddings: true // Sending embeddings
+    };
+
+    const result = await this.externalServer.sendEmbeddings(document, options);
+    
+    // Store external server response
+    document.externalId = result.id || result.documentId;
+    document.externalChunks = result.chunkIds || [];
+    document.externalResult = result;
+    
+    console.log(`✅ Sent embeddings to external server: ${document.relativePath}`);
   }
 
   // 🆕 NEW: Local processing (extracted from original)
@@ -324,10 +416,10 @@ class KnowledgeBaseGenerator extends EventEmitter {
     return chunks;
   }
 
+
   async generateEmbeddings(document) {
     if (!this.config.openaiApiKey) {
-      console.warn('⚠️  OpenAI API key not provided, skipping embeddings');
-      return;
+      throw new Error('OpenAI API key is required for embedding generation');
     }
 
     try {
@@ -338,7 +430,7 @@ class KnowledgeBaseGenerator extends EventEmitter {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'text-embedding-ada-002',
+          model: 'text-embedding-3-large',
           input: document.chunks.map(chunk =>
             chunk.content.substring(0, 8000) // API limit
           )
@@ -347,6 +439,13 @@ class KnowledgeBaseGenerator extends EventEmitter {
 
       const data = await response.json();
 
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Invalid OpenAI API key. Please check your OPENAI_API_KEY');
+        }
+        throw new Error(`OpenAI API error (${response.status}): ${data.error?.message || 'Unknown error'}`);
+      }
+
       if (data.data) {
         document.chunks.forEach((chunk, index) => {
           chunk.embedding = data.data[index].embedding;
@@ -354,7 +453,7 @@ class KnowledgeBaseGenerator extends EventEmitter {
         console.log(`  ✅ Generated ${data.data.length} embeddings`);
       }
     } catch (error) {
-      console.warn(`  ⚠️  Failed to generate embeddings: ${error.message}`);
+      throw new Error(`Failed to generate embeddings: ${error.message}`);
     }
   }
 
@@ -539,7 +638,8 @@ Options:
   --chunk-size        Chunk size in characters (default: 1000)
   --chunk-overlap     Overlap between chunks (default: 200)
   --max-file-size     Maximum file size in MB (default: 10)
-  --embeddings        Generate OpenAI embeddings (requires OPENAI_API_KEY env var)
+  --chunks-only       Create chunks locally (and send to server if enabled)
+  --with-embeddings   Create chunks with embeddings (requires OPENAI_API_KEY env var)
   --no-comments       Exclude comments from code
   --exclude           Additional paths to exclude (comma-separated)
   --extensions        File extensions to include (comma-separated)
@@ -552,7 +652,8 @@ Notion Options:
 
 Examples:
   src-to-kb /path/to/repo
-  src-to-kb /path/to/repo --output ./my-kb --embeddings
+  src-to-kb /path/to/repo --output ./my-kb --with-embeddings
+  src-to-kb /path/to/repo --chunks-only
   src-to-kb . --exclude tests,examples --extensions .js,.ts
   
   src-to-kb --source=notion --notion-key=secret_xxx --notion-url=https://notion.so/My-Page-abc123
@@ -614,8 +715,10 @@ Note: For code analysis, repository path must be provided as the first non-flag 
       options.chunkOverlap = parseInt(args[++i]);
     } else if (arg === '--max-file-size') {
       options.maxFileSize = parseInt(args[++i]) * 1024 * 1024;
-    } else if (arg === '--embeddings') {
+    } else if (arg === '--with-embeddings') {
       options.generateEmbeddings = true;
+    } else if (arg === '--chunks-only') {
+      options.createChunks = true;
     } else if (arg === '--no-comments') {
       options.includeComments = false;
     } else if (arg === '--exclude') {
@@ -652,33 +755,73 @@ Note: For code analysis, repository path must be provided as the first non-flag 
         for (const doc of documents) {
           console.log(`\n📄 Processing: ${doc.title}`);
           
-          // Check if external server is enabled
+          // Process Notion document using same logic as regular files
+          const document = {
+            id: doc.id,
+            path: doc.title,
+            relativePath: doc.title,
+            fileName: doc.title,
+            extension: '.md',
+            size: doc.size || doc.content.length,
+            content: doc.content,
+            checksum: generator.generateChecksum(doc.content),
+            metadata: {
+              ...doc.metadata,
+              createdAt: doc.metadata?.createdAt || new Date(),
+              modifiedAt: doc.metadata?.modifiedAt || new Date(),
+              lines: doc.content.split('\n').length,
+              language: 'markdown',
+              type: 'document'
+            },
+            chunks: []
+          };
+
+          // Use the same processing logic as regular files
           if (generator.useExternalServer) {
-            // Send to external server (server will handle chunking and storage)
-            try {
-              await generator.processWithExternalServer(doc);
+            // Server mode: Send to server (no fallback)
+            if (generator.config.createChunks || generator.config.generateEmbeddings) {
+              // Create chunks locally first
+              document.chunks = generator.createChunks(document.content, document.id, document.metadata);
+              
+              // Generate embeddings if needed
+              if (generator.config.generateEmbeddings) {
+                await generator.generateEmbeddings(document);
+              }
+              
+              // Save locally
+              await generator.saveDocument(document);
               generator.stats.filesProcessed++;
-              generator.stats.totalSize += doc.size;
-            } catch (error) {
-              console.warn(`   ⚠️  External server failed, saving locally: ${error.message}`);
-              // Fallback to local processing
-              const chunks = generator.createChunks(doc.content, doc.id, doc.metadata);
-              doc.chunks = chunks;
-              await generator.saveDocument(doc);
+              generator.stats.totalSize += document.size;
+              generator.stats.totalChunks += document.chunks.length;
+              
+              // Then send to server
+              if (generator.config.generateEmbeddings) {
+                // Send chunks with embeddings
+                await generator.sendEmbeddingsToServer(document);
+              } else {
+                // Send chunks only
+                await generator.sendChunksToServer(document);
+              }
+            } else {
+              // Default: Send raw content (server does chunking)
+              await generator.processWithExternalServer(document);
               generator.stats.filesProcessed++;
-              generator.stats.totalSize += doc.size;
-              generator.stats.totalChunks += chunks.length;
-              console.log(`   ✅ Created ${chunks.length} chunks locally`);
+              generator.stats.totalSize += document.size;
             }
           } else {
-            // Local processing: create chunks and save
-            const chunks = generator.createChunks(doc.content, doc.id, doc.metadata);
-            doc.chunks = chunks;
-            await generator.saveDocument(doc);
+            // Local mode: Process locally only
+            document.chunks = generator.createChunks(document.content, document.id, document.metadata);
+            
+            // Generate embeddings if needed
+            if (generator.config.generateEmbeddings) {
+              await generator.generateEmbeddings(document);
+            }
+            
+            await generator.saveDocument(document);
             generator.stats.filesProcessed++;
-            generator.stats.totalSize += doc.size;
-            generator.stats.totalChunks += chunks.length;
-            console.log(`   ✅ Created ${chunks.length} chunks`);
+            generator.stats.totalSize += document.size;
+            generator.stats.totalChunks += document.chunks.length;
+            console.log(`   ✅ Created ${document.chunks.length} chunks`);
           }
         }
         
@@ -696,7 +839,8 @@ Note: For code analysis, repository path must be provided as the first non-flag 
         process.exit(0);
         
       } catch (error) {
-        console.error('\n❌ Error:', error.message);
+        // Error message already contains detailed guidance from validation
+        console.error(`\n❌ ${error.message}`);
         process.exit(1);
       }
     })();
@@ -716,7 +860,8 @@ Note: For code analysis, repository path must be provided as the first non-flag 
         process.exit(0);
       })
       .catch(error => {
-        console.error('\n❌ Error:', error.message);
+        // Error message already contains detailed guidance from validation
+        console.error(`\n❌ ${error.message}`);
         process.exit(1);
       });
   }

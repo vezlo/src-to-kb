@@ -5,6 +5,7 @@ const path = require('path');
 const { AnswerModeManager } = require('./modes');
 const { ExternalServerService } = require('./external-server-service');
 const { isExternalServerEnabled } = require('./external-server-config');
+const { validateExternalServer: validateExternalServerUtil } = require('./validation-utils');
 
 class KnowledgeBaseSearch {
   constructor(kbPath = './knowledge-base', mode = 'developer') {
@@ -15,16 +16,36 @@ class KnowledgeBaseSearch {
     
     // 🆕 NEW: Check if external server URL is provided (replaces USE_EXTERNAL_KB flag)
     this.useExternalServer = isExternalServerEnabled();
+    this.serverValidated = false;
     
     if (this.useExternalServer) {
+      // Check if search URL is configured
+      if (!process.env.EXTERNAL_KB_SEARCH_URL) {
+        throw new Error('EXTERNAL_KB_SEARCH_URL is required when using external server for search.\n   → Please set EXTERNAL_KB_SEARCH_URL environment variable\n   → Example: EXTERNAL_KB_SEARCH_URL=http://localhost:3002/api/search');
+      }
+      
       this.externalServer = new ExternalServerService();
       console.log('🌐 External server search enabled');
+      console.log(`   Search URL: ${process.env.EXTERNAL_KB_SEARCH_URL}`);
       if (process.env.EXTERNAL_KB_API_KEY) {
         console.log(`   API Key configured`);
       }
     } else {
       this.loadKnowledgeBase();
     }
+  }
+
+  /**
+   * Validate external server availability and authentication
+   * Called before first search to fail fast if server is unavailable
+   */
+  async validateExternalServer() {
+    if (this.serverValidated) {
+      return;
+    }
+
+    await validateExternalServerUtil(this.externalServer, { cacheResult: true });
+    this.serverValidated = true;
   }
 
   loadKnowledgeBase() {
@@ -69,6 +90,9 @@ class KnowledgeBaseSearch {
   }
 
   async searchExternal(query, options = {}) {
+    // Validate server before first search
+    await this.validateExternalServer();
+    
     try {
       console.log(`🔍 Searching external server: "${query}"`);
       
@@ -702,7 +726,8 @@ Examples:
       process.exit(1);
   }
   })().catch(error => {
-    console.error('❌ Error:', error.message);
+    // Error message already contains detailed guidance from validation
+    console.error(`\n❌ ${error.message}`);
     process.exit(1);
   });
 }

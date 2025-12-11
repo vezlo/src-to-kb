@@ -13,6 +13,7 @@ After installation, you'll have access to these commands:
 
 - **`src-to-kb`** - Generate knowledge base from source code
 - **`src-to-kb-search`** - Search the knowledge base
+- **`src-to-kb-upload`** - Upload local knowledge base to external server
 - **`src-to-kb-api`** - Start REST API server with Swagger docs
 - **`src-to-kb-mcp`** - Start MCP server for IDE integration
 - **`src-to-kb-mcp-install`** - Auto-configure Claude Code/Cursor
@@ -54,6 +55,19 @@ src-to-kb-search search "How does routing work?" --mode developer
 
 **That's it!** Your codebase is now searchable with AI assistance.
 
+## Processing Modes & Flags
+
+The following table shows how flags work across different sources and modes:
+
+| Source | Mode | Default (no flags) | `--chunks-only` | `--with-embeddings` |
+|--------|------|-------------------|-----------------|---------------------|
+| **Codebase** | Local | Creates chunks | Same (redundant) | Creates chunks + embeddings |
+| **Codebase** | Server | Sends raw content | Creates chunks → sends | Creates chunks + embeddings → sends |
+| **Notion** | Local | Creates chunks | Same (redundant) | Creates chunks + embeddings |
+| **Notion** | Server | Sends raw content | Creates chunks → sends | Creates chunks + embeddings → sends |
+
+**Note**: Server mode is enabled when `EXTERNAL_KB_URL` environment variable is set.
+
 ## External Server Integration 🌐
 
 ### 🚀 Try It Now with Public Demo Server
@@ -61,20 +75,48 @@ src-to-kb-search search "How does routing work?" --mode developer
 Experience external server integration immediately with our production-ready assistant-server:
 
 ```bash
-# Generate knowledge base using assistant-server
+# Default: Send raw content (server creates chunks)
 EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items src-to-kb ./your-repo
+
+# Create chunks locally, then send to server
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items src-to-kb ./your-repo --chunks-only
+
+# Create chunks + embeddings locally, then send to server
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items OPENAI_API_KEY=sk-... src-to-kb ./your-repo --with-embeddings
 
 # With API key authentication
 EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items EXTERNAL_KB_API_KEY=your-api-key src-to-kb ./your-repo
 
 # Search using assistant-server
-EXTERNAL_KB_URL=https://your-assistant-server.com/api/search src-to-kb-search search "how does authentication work?"
-
-# Search with API key
-EXTERNAL_KB_URL=https://your-assistant-server.com/api/search EXTERNAL_KB_API_KEY=your-api-key src-to-kb-search search "how does authentication work?"
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items \
+EXTERNAL_KB_SEARCH_URL=https://your-assistant-server.com/api/search \
+src-to-kb-search search "how does authentication work?"
 ```
 
 **Assistant Server**: [vezlo/assistant-server](https://github.com/vezlo/assistant-server) - Production-ready Node.js/TypeScript API server with vector search and Docker deployment
+
+### 📤 Upload Local Knowledge Base
+
+Upload an existing local knowledge base to an external server:
+
+```bash
+# Default: Upload raw content (reconstructs from chunks)
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items \
+src-to-kb-upload --kb ./knowledge-base
+
+# Upload chunks only (server generates embeddings)
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items \
+src-to-kb-upload --kb ./knowledge-base --chunks-only
+
+# Upload chunks with embeddings
+EXTERNAL_KB_URL=https://your-assistant-server.com/api/knowledge/items \
+src-to-kb-upload --kb ./knowledge-base --with-embeddings
+```
+
+**Requirements:**
+- `EXTERNAL_KB_URL` environment variable must be set
+- Knowledge base must have `documents/` and `chunks/` directories
+- For `--with-embeddings`: `embeddings/` directory must exist
 
 ### 🏢 Enterprise Setup
 
@@ -111,11 +153,18 @@ Send Notion content directly to your assistant-server:
 export EXTERNAL_KB_URL=http://localhost:3002/api/knowledge/items
 export EXTERNAL_KB_API_KEY=your-api-key
 
-# Fetch from Notion and send to server
+# Send raw content from Notion to server (default)
 src-to-kb --source=notion --notion-url=https://notion.so/Your-Page-abc123
 
+# Send chunks from Notion to server
+src-to-kb --source=notion --notion-url=https://notion.so/Your-Page-abc123 --chunks-only
+
+# Send chunks + embeddings from Notion to server
+OPENAI_API_KEY=sk-... src-to-kb --source=notion --notion-url=https://notion.so/Your-Page-abc123 --with-embeddings
+
 # Search via external server
-export EXTERNAL_KB_URL=http://localhost:3002/api/knowledge/search
+export EXTERNAL_KB_URL=http://localhost:3002/api/knowledge/items
+export EXTERNAL_KB_SEARCH_URL=http://localhost:3002/api/search
 src-to-kb-search search "your query"
 ```
 
@@ -140,7 +189,7 @@ src-to-kb --source=notion --notion-url=https://notion.so/Team-Wiki-xyz789
 # With API key as parameter
 src-to-kb --source=notion --notion-key=secret_xxx --notion-url=https://notion.so/Page-abc123
 
-# Send to external server
+# Send to external server (raw content by default)
 EXTERNAL_KB_URL=http://localhost:3002/api/knowledge/items \
 EXTERNAL_KB_API_KEY=your-key \
 src-to-kb --source=notion --notion-url=https://notion.so/Page-abc123
@@ -149,7 +198,8 @@ src-to-kb --source=notion --notion-url=https://notion.so/Page-abc123
 src-to-kb-search search "project timeline" --kb ./knowledge-base/notion
 
 # Search via external server
-EXTERNAL_KB_URL=http://localhost:3002/api/knowledge/search \
+EXTERNAL_KB_URL=http://localhost:3002/api/knowledge/items \
+EXTERNAL_KB_SEARCH_URL=http://localhost:3002/api/search \
 src-to-kb-search search "project timeline"
 ```
 
@@ -180,7 +230,7 @@ src-to-kb /path/to/your/repo --output ./my-knowledge-base
 export OPENAI_API_KEY=your-api-key-here
 
 # Generate with embeddings
-src-to-kb /path/to/your/repo --embeddings
+src-to-kb /path/to/your/repo --with-embeddings
 ```
 
 ### 4. Search with Answer Modes
@@ -297,7 +347,8 @@ Options:
   --chunk-size        Chunk size in characters (default: 1000)
   --chunk-overlap     Overlap between chunks (default: 200)
   --max-file-size     Maximum file size in MB (default: 10)
-  --embeddings        Generate OpenAI embeddings (requires OPENAI_API_KEY)
+  --chunks-only       Create chunks locally (and send to server if enabled)
+  --with-embeddings   Create chunks with embeddings (requires OPENAI_API_KEY)
   --no-comments       Exclude comments from code
   --exclude           Additional paths to exclude (comma-separated)
   --extensions        File extensions to include (comma-separated)
@@ -341,10 +392,10 @@ src-to-kb-search modes
 
 ```bash
 # Using npm package
-src-to-kb /path/to/repo --output ./repo-kb --embeddings
+src-to-kb /path/to/repo --output ./repo-kb --with-embeddings
 
 # Or with npx
-npx @vezlo/src-to-kb /path/to/repo --output ./repo-kb --embeddings
+npx @vezlo/src-to-kb /path/to/repo --output ./repo-kb --with-embeddings
 ```
 
 ### Process Only JavaScript and TypeScript Files
