@@ -1,12 +1,13 @@
 {
   "name": "@vezlo/src-to-kb",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Convert source code repositories into searchable knowledge bases with MCP support for Claude and Cursor",
   "main": "kb-generator.js",
   "type": "commonjs",
   "bin": {
     "src-to-kb": "./kb-generator.js",
     "src-to-kb-search": "./search.js",
+    "src-to-kb-upload": "./upload.js",
     "src-to-kb-mcp": "./mcp-server.mjs",
     "src-to-kb-mcp-install": "./install-mcp.js",
     "src-to-kb-api": "./api-server.js"

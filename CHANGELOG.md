@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.5.0] - 2025-12-09
+
+### Changed
+- **Flag Names**: Renamed `--embeddings` to `--with-embeddings` and added `--chunks-only` flag for clarity
+- **Embedding Model**: Upgraded from `text-embedding-ada-002` to `text-embedding-3-large` (3072 dimensions)
+- **Payload Structure**: Enhanced to support chunks array with `hasEmbeddings` flag for external server integration
+- **Upload Command**: Added `--chunks-only` and `--with-embeddings` flags to upload command
+- **Search URL**: `EXTERNAL_KB_SEARCH_URL` is now required (no auto-generation) for external server search operations
+
+### Added
+- **Chunks Support**: `--chunks-only` flag to create chunks locally (useful with external server)
+- **Processing Modes Table**: Added comprehensive table in README showing all mode/flag combinations
+- **Early Validation**: OpenAI API key and external server validation before processing starts
+- **Validation Utilities**: Centralized validation functions in `validation-utils.js` to eliminate code duplication
+- **Server Health Check**: External server validation now includes `/health` endpoint check before processing
+- **Separate Search URL**: `EXTERNAL_KB_SEARCH_URL` environment variable for independent search endpoint configuration
+
+### Fixed
+- Improved error handling for invalid API keys and server authentication failures
+- Better error messages with actionable guidance
+- Removed duplicate error logging in validation flow
+- Search command now requires explicit `EXTERNAL_KB_SEARCH_URL` when using external server
+
 ## [1.4.0] - 2025-01-06
 
 ### Added
