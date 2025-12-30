@@ -309,11 +309,13 @@ class ExternalServerService {
       throw new Error(`Server health check failed: ${error.message}\n   → Please verify the server is running at ${baseUrl}\n   → Check the EXTERNAL_KB_URL path is correct`);
     }
 
-    // Step 2: Test authentication with search endpoint
+    // Step 2: Test authentication with search endpoint (only if search URL is configured)
     try {
       const searchUrl = this.config.searchUrl;
       if (!searchUrl) {
-        throw new Error('EXTERNAL_KB_SEARCH_URL is required when using external server. Please set EXTERNAL_KB_SEARCH_URL environment variable.');
+        console.log('   ⚠️  EXTERNAL_KB_SEARCH_URL not set (search functionality will not be available)');
+        console.log('   ✅ External server validated for document upload\n');
+        return; // Skip search validation if URL not provided
       }
 
       const headers = { ...this.config.headers };
