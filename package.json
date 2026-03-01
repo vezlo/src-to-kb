@@ -15,11 +15,12 @@
   "scripts": {
     "start": "node kb-generator.js",
     "test": "node scripts/test.js",
+    "test:analyzers": "node --test analyzers/*/__tests__/*.test.js",
     "example": "node kb-generator.js ../SaaSBot --output ./test-output",
     "search": "node search.js",
     "mcp": "node mcp-server.mjs",
     "api": "node api-server.js",
-    "api:dev": "PORT=3000 API_KEY=dev-key nodemon api-server.js",
+    "api:dev": "PORT=3001 API_KEY=dev-key nodemon api-server.js",
     "publish-package": "./scripts/publish.sh",
     "prepublishOnly": "npm test"
   },
@@ -64,6 +65,12 @@
     "multer": "^2.0.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
+  },
+  "optionalDependencies": {
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-ruby": "^0.23.1",
+    "tree-sitter-typescript": "^0.23.2",
+    "tree-sitter-dart": "^0.0.3"
   },
   "engines": {
     "node": ">=14.0.0"

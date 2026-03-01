@@ -7,6 +7,7 @@ const { EventEmitter } = require('events');
 const { ExternalServerService } = require('./external-server-service');
 const { isExternalServerEnabled } = require('./external-server-config');
 const { validateOpenAIKey: validateOpenAIKeyUtil, validateExternalServer: validateExternalServerUtil } = require('./validation-utils');
+const { getAnalyzer, getAnalyzerStats } = require('./analyzers');
 
 class KnowledgeBaseGenerator extends EventEmitter {
   constructor(config = {}) {
@@ -78,6 +79,9 @@ class KnowledgeBaseGenerator extends EventEmitter {
 
   async processRepository(repoPath, options = {}) {
     console.log(`\n🔍 Processing repository: ${repoPath}\n`);
+
+    // Store repo path for analyzer framework detection
+    this._repoPath = path.resolve(repoPath);
 
     if (!fs.existsSync(repoPath)) {
       throw new Error(`Repository path does not exist: ${repoPath}`);
@@ -325,8 +329,52 @@ class KnowledgeBaseGenerator extends EventEmitter {
     // Clean content
     const cleanedContent = this.cleanContent(document.content, document.metadata.type);
 
-    // Create chunks
-    document.chunks = this.createChunks(cleanedContent, document.id);
+    // Try AST-aware chunking if an analyzer is available
+    let astUsed = false;
+    const ext = path.extname(document.path);
+    const analyzer = getAnalyzer(ext, this._repoPath);
+
+    if (analyzer) {
+      try {
+        const tree = analyzer.parse(document.path, document.content);
+        if (tree) {
+          const metadata = analyzer.extractMetadata(tree, document.relativePath, document.content);
+          const enrichedMetadata = analyzer.enrich(metadata, tree, document.content, document.relativePath);
+          const astChunks = analyzer.chunk(tree, document.content, {
+            maxSize: this.config.chunkSize,
+            overlap: this.config.chunkOverlap,
+          }, document.relativePath);
+
+          // Build enriched chunks with IDs and ast metadata
+          document.chunks = astChunks.map((chunk, index) => ({
+            id: `${document.id}_chunk_${index}`,
+            index,
+            content: chunk.content,
+            startLine: chunk.startLine,
+            endLine: chunk.endLine,
+            size: chunk.size,
+            ...(chunk.context ? { context: chunk.context } : {}),
+            ast: enrichedMetadata,
+          }));
+
+          astUsed = true;
+          if (!this.stats.analyzerStats) {
+            this.stats.analyzerStats = { filesWithAST: 0, filesWithTextFallback: 0, analyzersUsed: new Set(), enrichmentsApplied: new Set() };
+          }
+          this.stats.analyzerStats.filesWithAST++;
+        }
+      } catch (err) {
+        console.warn(`⚠️  AST parsing failed for ${document.relativePath}, falling back to text chunking: ${err.message}`);
+      }
+    }
+
+    if (!astUsed) {
+      // Fallback: existing text-based chunking
+      document.chunks = this.createChunks(cleanedContent, document.id);
+      if (this.stats.analyzerStats) {
+        this.stats.analyzerStats.filesWithTextFallback++;
+      }
+    }
 
     // Generate embeddings if configured
     if (this.config.generateEmbeddings && this.config.openaiApiKey) {
@@ -487,9 +535,18 @@ class KnowledgeBaseGenerator extends EventEmitter {
   async saveMetadata() {
     const metadataPath = path.join(this.config.outputPath, 'metadata', 'summary.json');
 
+    // Finalize analyzer stats for serialization (convert Sets to arrays)
+    const analyzerStats = this.stats.analyzerStats
+      ? {
+          filesWithAST: this.stats.analyzerStats.filesWithAST,
+          filesWithTextFallback: this.stats.analyzerStats.filesWithTextFallback,
+          ...getAnalyzerStats(),
+        }
+      : undefined;
+
     const summary = {
       generatedAt: new Date().toISOString(),
-      stats: this.stats,
+      stats: { ...this.stats, analyzerStats },
       config: {
         chunkSize: this.config.chunkSize,
         chunkOverlap: this.config.chunkOverlap,
