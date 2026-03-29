@@ -18,6 +18,10 @@ After installation, you'll have access to these commands:
 - **`src-to-kb-mcp`** - Start MCP server for IDE integration
 - **`src-to-kb-mcp-install`** - Auto-configure Claude Code/Cursor
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/vezlo-src-to-kb).
+
 ## Features
 
 - 📁 **Multi-language Support**: JavaScript, TypeScript, Python, Java, C++, Go, Rust, and more
